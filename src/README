@@ -1,0 +1,9 @@
+This directory contains the source code for the ILOC 
+simulator, with the changes required for Lab 3.
+
+Those changes are: (concisely)
+
+1.  changes in the instruction latencies in instruction.c
+2.  a different default stall_mode in sim.c
+
+

@@ -1,0 +1,448 @@
+Terminals unused in grammar
+
+   DOUTPUT
+
+
+Gramática
+
+    0 $accept: iloc_program $end
+
+    1 iloc_program: instruction_list
+
+    2 instruction_list: instruction
+    3                 | label_def instruction
+    4                 | instruction instruction_list
+    5                 | label_def instruction instruction_list
+
+    6 instruction: operation
+    7            | OPEN_BRACKET operation_list CLOSE_BRACKET
+
+    8 operation_list: operation
+    9               | operation SEMICOLON operation_list
+
+   10 operation: the_opcode operand_list ARROW operand_list
+   11          | the_opcode operand_list
+   12          | the_opcode ARROW operand_list
+   13          | the_opcode
+
+   14 the_opcode: OPCODE
+
+   15 operand_list: reg
+   16             | reg COMMA operand_list
+   17             | const
+   18             | const COMMA operand_list
+   19             | lbl
+   20             | lbl COMMA operand_list
+
+   21 reg: REGISTER
+
+   22 const: NUMBER
+
+   23 lbl: LABEL
+
+   24 label_def: TARGET
+
+
+Terminais, com as regras onde eles aparecem
+
+$end (0) 0
+error (256)
+OPEN_BRACKET (258) 7
+CLOSE_BRACKET (259) 7
+SEMICOLON (260) 9
+COMMA (261) 16 18 20
+ARROW (262) 10 12
+OPCODE (263) 14
+DOUTPUT (264)
+REGISTER (265) 21
+NUMBER (266) 22
+LABEL (267) 23
+TARGET (268) 24
+
+
+Não-terminais com as regras onde eles aparecem
+
+$accept (14)
+    à esquerda: 0
+iloc_program (15)
+    à esquerda: 1, à direita: 0
+instruction_list (16)
+    à esquerda: 2 3 4 5, à direita: 1 4 5
+instruction (17)
+    à esquerda: 6 7, à direita: 2 3 4 5
+operation_list (18)
+    à esquerda: 8 9, à direita: 7 9
+operation (19)
+    à esquerda: 10 11 12 13, à direita: 6 8 9
+the_opcode (20)
+    à esquerda: 14, à direita: 10 11 12 13
+operand_list (21)
+    à esquerda: 15 16 17 18 19 20, à direita: 10 11 12 16 18 20
+reg (22)
+    à esquerda: 21, à direita: 15 16
+const (23)
+    à esquerda: 22, à direita: 17 18
+lbl (24)
+    à esquerda: 23, à direita: 19 20
+label_def (25)
+    à esquerda: 24, à direita: 3 5
+
+
+State 0
+
+    0 $accept: . iloc_program $end
+
+    OPEN_BRACKET  deslocar, e ir ao estado 1
+    OPCODE        deslocar, e ir ao estado 2
+    TARGET        deslocar, e ir ao estado 3
+
+    iloc_program      ir ao estado 4
+    instruction_list  ir ao estado 5
+    instruction       ir ao estado 6
+    operation         ir ao estado 7
+    the_opcode        ir ao estado 8
+    label_def         ir ao estado 9
+
+
+State 1
+
+    7 instruction: OPEN_BRACKET . operation_list CLOSE_BRACKET
+
+    OPCODE  deslocar, e ir ao estado 2
+
+    operation_list  ir ao estado 10
+    operation       ir ao estado 11
+    the_opcode      ir ao estado 8
+
+
+State 2
+
+   14 the_opcode: OPCODE .
+
+    $padrão  reduzir usando a regra 14 (the_opcode)
+
+
+State 3
+
+   24 label_def: TARGET .
+
+    $padrão  reduzir usando a regra 24 (label_def)
+
+
+State 4
+
+    0 $accept: iloc_program . $end
+
+    $end  deslocar, e ir ao estado 12
+
+
+State 5
+
+    1 iloc_program: instruction_list .
+
+    $padrão  reduzir usando a regra 1 (iloc_program)
+
+
+State 6
+
+    2 instruction_list: instruction .
+    4                 | instruction . instruction_list
+
+    OPEN_BRACKET  deslocar, e ir ao estado 1
+    OPCODE        deslocar, e ir ao estado 2
+    TARGET        deslocar, e ir ao estado 3
+
+    $padrão  reduzir usando a regra 2 (instruction_list)
+
+    instruction_list  ir ao estado 13
+    instruction       ir ao estado 6
+    operation         ir ao estado 7
+    the_opcode        ir ao estado 8
+    label_def         ir ao estado 9
+
+
+State 7
+
+    6 instruction: operation .
+
+    $padrão  reduzir usando a regra 6 (instruction)
+
+
+State 8
+
+   10 operation: the_opcode . operand_list ARROW operand_list
+   11          | the_opcode . operand_list
+   12          | the_opcode . ARROW operand_list
+   13          | the_opcode .
+
+    ARROW     deslocar, e ir ao estado 14
+    REGISTER  deslocar, e ir ao estado 15
+    NUMBER    deslocar, e ir ao estado 16
+    LABEL     deslocar, e ir ao estado 17
+
+    $padrão  reduzir usando a regra 13 (operation)
+
+    operand_list  ir ao estado 18
+    reg           ir ao estado 19
+    const         ir ao estado 20
+    lbl           ir ao estado 21
+
+
+State 9
+
+    3 instruction_list: label_def . instruction
+    5                 | label_def . instruction instruction_list
+
+    OPEN_BRACKET  deslocar, e ir ao estado 1
+    OPCODE        deslocar, e ir ao estado 2
+
+    instruction  ir ao estado 22
+    operation    ir ao estado 7
+    the_opcode   ir ao estado 8
+
+
+State 10
+
+    7 instruction: OPEN_BRACKET operation_list . CLOSE_BRACKET
+
+    CLOSE_BRACKET  deslocar, e ir ao estado 23
+
+
+State 11
+
+    8 operation_list: operation .
+    9               | operation . SEMICOLON operation_list
+
+    SEMICOLON  deslocar, e ir ao estado 24
+
+    $padrão  reduzir usando a regra 8 (operation_list)
+
+
+State 12
+
+    0 $accept: iloc_program $end .
+
+    $padrão  aceitar
+
+
+State 13
+
+    4 instruction_list: instruction instruction_list .
+
+    $padrão  reduzir usando a regra 4 (instruction_list)
+
+
+State 14
+
+   12 operation: the_opcode ARROW . operand_list
+
+    REGISTER  deslocar, e ir ao estado 15
+    NUMBER    deslocar, e ir ao estado 16
+    LABEL     deslocar, e ir ao estado 17
+
+    operand_list  ir ao estado 25
+    reg           ir ao estado 19
+    const         ir ao estado 20
+    lbl           ir ao estado 21
+
+
+State 15
+
+   21 reg: REGISTER .
+
+    $padrão  reduzir usando a regra 21 (reg)
+
+
+State 16
+
+   22 const: NUMBER .
+
+    $padrão  reduzir usando a regra 22 (const)
+
+
+State 17
+
+   23 lbl: LABEL .
+
+    $padrão  reduzir usando a regra 23 (lbl)
+
+
+State 18
+
+   10 operation: the_opcode operand_list . ARROW operand_list
+   11          | the_opcode operand_list .
+
+    ARROW  deslocar, e ir ao estado 26
+
+    $padrão  reduzir usando a regra 11 (operation)
+
+
+State 19
+
+   15 operand_list: reg .
+   16             | reg . COMMA operand_list
+
+    COMMA  deslocar, e ir ao estado 27
+
+    $padrão  reduzir usando a regra 15 (operand_list)
+
+
+State 20
+
+   17 operand_list: const .
+   18             | const . COMMA operand_list
+
+    COMMA  deslocar, e ir ao estado 28
+
+    $padrão  reduzir usando a regra 17 (operand_list)
+
+
+State 21
+
+   19 operand_list: lbl .
+   20             | lbl . COMMA operand_list
+
+    COMMA  deslocar, e ir ao estado 29
+
+    $padrão  reduzir usando a regra 19 (operand_list)
+
+
+State 22
+
+    3 instruction_list: label_def instruction .
+    5                 | label_def instruction . instruction_list
+
+    OPEN_BRACKET  deslocar, e ir ao estado 1
+    OPCODE        deslocar, e ir ao estado 2
+    TARGET        deslocar, e ir ao estado 3
+
+    $padrão  reduzir usando a regra 3 (instruction_list)
+
+    instruction_list  ir ao estado 30
+    instruction       ir ao estado 6
+    operation         ir ao estado 7
+    the_opcode        ir ao estado 8
+    label_def         ir ao estado 9
+
+
+State 23
+
+    7 instruction: OPEN_BRACKET operation_list CLOSE_BRACKET .
+
+    $padrão  reduzir usando a regra 7 (instruction)
+
+
+State 24
+
+    9 operation_list: operation SEMICOLON . operation_list
+
+    OPCODE  deslocar, e ir ao estado 2
+
+    operation_list  ir ao estado 31
+    operation       ir ao estado 11
+    the_opcode      ir ao estado 8
+
+
+State 25
+
+   12 operation: the_opcode ARROW operand_list .
+
+    $padrão  reduzir usando a regra 12 (operation)
+
+
+State 26
+
+   10 operation: the_opcode operand_list ARROW . operand_list
+
+    REGISTER  deslocar, e ir ao estado 15
+    NUMBER    deslocar, e ir ao estado 16
+    LABEL     deslocar, e ir ao estado 17
+
+    operand_list  ir ao estado 32
+    reg           ir ao estado 19
+    const         ir ao estado 20
+    lbl           ir ao estado 21
+
+
+State 27
+
+   16 operand_list: reg COMMA . operand_list
+
+    REGISTER  deslocar, e ir ao estado 15
+    NUMBER    deslocar, e ir ao estado 16
+    LABEL     deslocar, e ir ao estado 17
+
+    operand_list  ir ao estado 33
+    reg           ir ao estado 19
+    const         ir ao estado 20
+    lbl           ir ao estado 21
+
+
+State 28
+
+   18 operand_list: const COMMA . operand_list
+
+    REGISTER  deslocar, e ir ao estado 15
+    NUMBER    deslocar, e ir ao estado 16
+    LABEL     deslocar, e ir ao estado 17
+
+    operand_list  ir ao estado 34
+    reg           ir ao estado 19
+    const         ir ao estado 20
+    lbl           ir ao estado 21
+
+
+State 29
+
+   20 operand_list: lbl COMMA . operand_list
+
+    REGISTER  deslocar, e ir ao estado 15
+    NUMBER    deslocar, e ir ao estado 16
+    LABEL     deslocar, e ir ao estado 17
+
+    operand_list  ir ao estado 35
+    reg           ir ao estado 19
+    const         ir ao estado 20
+    lbl           ir ao estado 21
+
+
+State 30
+
+    5 instruction_list: label_def instruction instruction_list .
+
+    $padrão  reduzir usando a regra 5 (instruction_list)
+
+
+State 31
+
+    9 operation_list: operation SEMICOLON operation_list .
+
+    $padrão  reduzir usando a regra 9 (operation_list)
+
+
+State 32
+
+   10 operation: the_opcode operand_list ARROW operand_list .
+
+    $padrão  reduzir usando a regra 10 (operation)
+
+
+State 33
+
+   16 operand_list: reg COMMA operand_list .
+
+    $padrão  reduzir usando a regra 16 (operand_list)
+
+
+State 34
+
+   18 operand_list: const COMMA operand_list .
+
+    $padrão  reduzir usando a regra 18 (operand_list)
+
+
+State 35
+
+   20 operand_list: lbl COMMA operand_list .
+
+    $padrão  reduzir usando a regra 20 (operand_list)
