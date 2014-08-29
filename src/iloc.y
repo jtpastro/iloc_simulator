@@ -39,6 +39,7 @@
     Operands* operands_ptr;
     Operand* operand_ptr;
     Opcode* opcode_ptr;
+  char *str;
 }
 
 %token OPEN_BRACKET
@@ -50,7 +51,7 @@
 %token DOUTPUT
 %token REGISTER
 %token NUMBER
-%token LABEL
+%token <str> LABEL
 %token TARGET
 
 %type <inst_ptr> instruction_list
@@ -242,8 +243,9 @@ const            : NUMBER
 
 lbl              : LABEL
                  {
+                     char *myLabel = $1;
 		     $$ = malloc(sizeof(Operand));
-		     $$->value = insert_label(strdup(yytext));
+		     $$->value = insert_label(myLabel);
 		     $$->next = NULL;
 		 }
                  ;
@@ -338,7 +340,7 @@ int verify_args(Opcode* operation,int srcs, int consts, int labels, int defs)
     return 1;
 }
     
-	
+
 void yyerror(char* s)
 {
   (void) fprintf(stderr, "%s at line %d\n", s, line_counter);

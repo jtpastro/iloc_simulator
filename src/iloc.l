@@ -20,6 +20,8 @@ NUM [0-9]+
 
 %}
 
+%option yylineno
+
 %%
 
 \[            {return OPEN_BRACKET;}
@@ -35,11 +37,16 @@ r{NUM}        {yylval.ival = atoi(&yytext[1]); return REGISTER;}
 [a-zA-Z0-9\_]+: {return TARGET;}
 
 [a-zA-Z0-9\_]+  {
+                
 		current_opcode = get_opcode(strdup(yytext));
-                if (current_opcode)
+
+                if (current_opcode){
                     return OPCODE;
-                else
+                }else{
+                    printf("[%s] %p\n", yytext, current_opcode);
+                    yylval.str = yytext;
                     return LABEL;
+                }
               }
 
 \/\/[^\n]*  { /* Comment */}
