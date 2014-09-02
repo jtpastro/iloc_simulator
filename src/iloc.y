@@ -52,7 +52,7 @@
 %token REGISTER
 %token NUMBER
 %token <str> LABEL
-%token TARGET
+%token <str> TARGET
 
 %type <inst_ptr> instruction_list
 %type <inst_ptr> instruction
@@ -252,10 +252,11 @@ lbl              : LABEL
 
 label_def        : TARGET
                  {
-		     int last_char = strlen(strdup(yytext)) - 1;
+             char *myLabel = $1; 
+		     int last_char = strlen(strdup(myLabel)) - 1;
 		     printf(" visited ");
 		     //yytext[last_char] = '\0';
-		     $$ = insert_label(strdup(yytext));
+		     $$ = insert_label(strdup(myLabel));
 		 }
                  ;
 

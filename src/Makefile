@@ -1,6 +1,6 @@
 # Makefile for ILOC simulator
 
-CFLAGS=-Wall
+CFLAGS=-Wall -g
 
 sim:		sim.o machine.o instruction.o hash.o lex.yy.o iloc.tab.o
 		gcc $(CFLAGS) -o sim sim.o machine.o instruction.o hash.o lex.yy.o iloc.tab.o
