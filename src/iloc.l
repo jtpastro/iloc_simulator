@@ -34,7 +34,10 @@ r{NUM}        {yylval.ival = atoi(&yytext[1]); return REGISTER;}
 {NUM}         {yylval.ival = atoi(yytext); return NUMBER;}
 \-{NUM}       {yylval.ival = atoi(yytext); return NUMBER;}
 
-[a-zA-Z0-9\_]+: {return TARGET;}
+[a-zA-Z0-9\_]+: {   
+                    printf("[%s] \n", yytext);
+                    yylval.str = yytext;
+                    return TARGET;}
 
 [a-zA-Z0-9\_]+  {
                 

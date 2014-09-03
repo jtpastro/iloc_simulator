@@ -168,7 +168,6 @@ void simulate(Instruction* code) {
 				if ( error_code_machine_constraints & 0x1 ) fprintf(stderr,"Error: Has more than one output instruction.\n");
 				exit(1);
 			}
-
 			new_effects = execute_instruction(code,&operation_count);
 			instruction_count++;
 
@@ -343,6 +342,7 @@ void simulate(Instruction* code) {
 		Change* new_changes;
 
 		while(current_op) {
+            fprintf(stderr, "OP_CODE: %d\n", current_op->opcode);
 			(*op_count)++;
 			new_changes = execute_operation(current_op);
 

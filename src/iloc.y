@@ -253,9 +253,7 @@ lbl              : LABEL
 label_def        : TARGET
                  {
              char *myLabel = $1; 
-		     int last_char = strlen(strdup(myLabel)) - 1;
 		     printf(" visited ");
-		     //yytext[last_char] = '\0';
 		     $$ = insert_label(strdup(myLabel));
 		 }
                  ;
