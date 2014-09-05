@@ -35,8 +35,9 @@ r{NUM}        {yylval.ival = atoi(&yytext[1]); return REGISTER;}
 \-{NUM}       {yylval.ival = atoi(yytext); return NUMBER;}
 
 [a-zA-Z0-9\_]+: {   
-                    printf("[%s] \n", yytext);
-                    yylval.str = yytext;
+                    char *lbl = yytext;
+                    lbl[strlen(lbl)-1]='\0';
+                    yylval.str = lbl;
                     return TARGET;}
 
 [a-zA-Z0-9\_]+  {
@@ -46,7 +47,6 @@ r{NUM}        {yylval.ival = atoi(&yytext[1]); return REGISTER;}
                 if (current_opcode){
                     return OPCODE;
                 }else{
-                    printf("[%s] %p\n", yytext, current_opcode);
                     yylval.str = yytext;
                     return LABEL;
                 }
