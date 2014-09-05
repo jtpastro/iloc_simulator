@@ -13,7 +13,7 @@ NUM [0-9]+
   #include <string.h>
 
   #include "instruction.h"
-  #include "iloc.tab.h"
+  #include "parser.h"
 
   int line_counter = 1;
   Opcode* current_opcode;
