@@ -7,7 +7,9 @@ FLEX_TARGET(MyScanner iloc.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.c)
 ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+)
 add_executable(sim
     sim.c
     instruction.c
