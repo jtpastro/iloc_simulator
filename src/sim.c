@@ -342,7 +342,6 @@ void simulate(Instruction* code) {
 		Change* new_changes;
 
 		while(current_op) {
-            fprintf(stderr, "OP_CODE: %d\n", current_op->opcode);
 			(*op_count)++;
 			new_changes = execute_operation(current_op);
 
