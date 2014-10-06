@@ -8,11 +8,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <argp.h>
 #include "instruction.h"
 #include "machine.h"
 #include "sim.h"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv) {
 	int mem_size = 0;
 	int reg_size = 0;
 	int current_argument = 1;
@@ -20,16 +21,15 @@ int main(int argc, char* argv[]) {
 	Instruction* code;
 
 	/* Set default stall mode - branches and memory */
-	set_stall_mode(2);  /* default for Lab 3 is stall mode 2 */
+	set_stall_mode(2);  
 
-	while(current_argument < argc)  {
+    argp_parse (0, argc, argv, 0, 0, 0);
+	/*while(current_argument < argc)  {
 		if (strcmp(argv[current_argument],"-h") == 0) {
 			print_help();
 			return 0;
 		}
 
-		/* All of the following flags require at least one additional parameter,
-		   so perform check here. */
 		if (current_argument == argc - 1) {
 			fprintf(stderr,"Invalid flag sequence: make sure any required numbers are included.\n");
 			return(1);
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-	}
+	}*/
 
 	if (!machine_initialized)
 		initialize_machine(reg_size,mem_size);
@@ -120,28 +120,6 @@ void print_help() {
 
 }
 
-/* Set stall flags appropriately */
-void set_stall_mode(int mode) {
-	stall_on_branches = 0;
-	stall_on_memory = 0;
-	stall_on_registers = 0;
-
-	switch(mode) {
-		case 3:
-			stall_on_registers = 1;
-		case 2:
-			stall_on_memory = 1;
-		case 1:
-			stall_on_branches = 1;
-		case 0:
-			break;
-		default:
-			fprintf(stderr,"Illegal safety mode specified.\n");
-			exit(1);
-	}
-}
-
-
 /* Simulate the code and output results to standard out */
 void simulate(Instruction* code) {
 	Change* list_of_effects = NULL; 
@@ -154,20 +132,6 @@ void simulate(Instruction* code) {
 	int error_code_machine_constraints = 0;
 
 	while(code) {
-		if (!((memory_stall(code,list_of_effects) && stall_on_memory) ||
-					(register_stall(code,list_of_effects) && stall_on_registers) ||
-					(branch_stall(list_of_effects) && stall_on_branches))) {
-			//sagnak(@rice.edu) was here	
-			error_code_machine_constraints = check_machine_constraints_conforming_lab_document(code) ;
-			if ( error_code_machine_constraints ) {
-				// used to be if (!check_machine_constraints(code)) {
-				fprintf(stderr,"Error: Machine constraints violated on cycle %d.\n", 1+cycle_count);
-				if ( error_code_machine_constraints & 0x8 ) fprintf(stderr,"Error: Has more than two operands.\n");
-				if ( error_code_machine_constraints & 0x4 ) fprintf(stderr,"Error: Has more than one load/store instruction.\n");
-				if ( error_code_machine_constraints & 0x2 ) fprintf(stderr,"Error: Has more than one mult instruction.\n");
-				if ( error_code_machine_constraints & 0x1 ) fprintf(stderr,"Error: Has more than one output instruction.\n");
-				exit(1);
-			}
 			new_effects = execute_instruction(code,&operation_count);
 			instruction_count++;
 
@@ -185,7 +149,6 @@ void simulate(Instruction* code) {
 
 			/* Go to next instruction */
 			code = code->next;
-			}
 
 			list_of_effects = execute_changes(list_of_effects,&last_effect,&code);
 			cycle_count++;
@@ -200,138 +163,6 @@ void simulate(Instruction* code) {
 		fprintf(stdout,"Executed %d instructions and %d operations in %d cycles.\n",
 				instruction_count,operation_count,cycle_count);
 
-	}
-
-	/* Returns 1 if the instruction uses a register that is not ready */
-	int register_stall(Instruction* inst,Change* changes) {
-		Operation* current_op = inst->operations;
-
-		while(current_op) {
-			/* Check source registers for operation */
-			if (!list_of_operands_ready(current_op->srcs,changes))
-				return 1;
-
-			/* Also check target registers on stores */
-			if ((opcode_specs[current_op->opcode].target_is_source) &&
-					(!list_of_operands_ready(current_op->defs,changes)))
-				return 1;
-
-			current_op = current_op->next;
-		}
-
-		/* All registers are ready if this point is reached */
-		return 0;
-	}
-
-	/* Returns 1 if all operands in the list are ready, and 
-	   return 0 if they are not */
-	int list_of_operands_ready(Operand* reg, Change* changes) {
-		while(reg) {
-			/* Non zero values in register_ready indicate that
-			   the register is not ready */
-			if (!reg_ready(reg->value,changes))
-				return 0;
-			reg = reg->next;
-		}
-
-		/* All register are ready if this point is reached */
-		return 1;
-	}
-
-	/* Returns 1 if the instruction uses a memory address that is not ready */
-	int memory_stall(Instruction* inst, Change* changes) {
-		int memory_location;
-		Operation* current_op = inst->operations;
-
-		while(current_op) {
-			switch(current_op->opcode) {
-				case LOAD:
-					memory_location = get_register(current_op->srcs->value);
-					if (!word_ready(memory_location,changes))
-						return 1;
-					break;
-
-				case LOADAI:
-					memory_location = get_register(current_op->srcs->value) +
-						current_op->consts->value;
-					if (!word_ready(memory_location,changes))
-						return 1;
-					break;
-
-				case LOADAO:
-					memory_location = get_register(current_op->srcs->value) +
-						get_register(current_op->srcs->next->value);
-					if (!word_ready(memory_location,changes))
-						return 1;
-					break;
-
-				case CLOAD:
-					memory_location = get_register(current_op->srcs->value);
-					if (!mem_ready(memory_location,changes))
-						return 1;
-					break;
-
-				case CLOADAI:
-					memory_location = get_register(current_op->srcs->value) +
-						current_op->consts->value;
-					if (!mem_ready(memory_location,changes))
-						return 1;
-					break;
-
-				case CLOADAO:
-					memory_location = get_register(current_op->srcs->value) +
-						get_register(current_op->srcs->next->value);
-					if (!mem_ready(memory_location,changes))
-						return 1;
-					break;
-
-				case OUTPUT:
-					memory_location = current_op->consts->value;
-					if (!mem_ready(memory_location,changes))
-						return 1;
-					break;
-
-
-				default:
-					break;
-
-			}
-
-			current_op = current_op->next;
-		}
-		/* All memory locations are ready if this point is reached */
-		return 0;
-	}
-
-	/* Returns 1 if the register does not depend on the list of effects */
-	int reg_ready(int reg, Change* effects) {
-		while(effects) {
-			if (effects->type == REGISTER && effects->location == reg)
-				return 0;
-			effects = effects->next;
-		}
-		return 1;
-	}
-
-	/* Returns 1 if the memory location does not depend on the list of effects */
-	int mem_ready(int location, Change* effects) {
-		while(effects) {
-			if (effects->type == MEMORY && effects->location == location)
-				return 0;
-			effects = effects->next;
-		}
-		return 1;
-	}
-
-	/* Returns 1 if the word of memory does not depend on the list of effects */
-	int word_ready(int location, Change* effects) {
-		while(effects) {
-			if (effects->type == MEMORY && effects->location >= location
-					&& effects->location <= (location+3))
-				return 0;
-			effects = effects->next;
-		}
-		return 1;
 	}
 
 	/* Execute all operations in a single instruction */
@@ -804,43 +635,4 @@ void simulate(Instruction* code) {
 
 		return (op_count <= 2 && mult_op_count <= 1 && memory_op_count <= 1);
 	}
-
-	// sagnak(@rice.edu) was here
-	int check_machine_constraints_conforming_lab_document(Instruction* inst) {
-		Operation* current_op = inst->operations;
-
-		int op_count = 0;
-		int output_op_count = 0;
-
-		int load_store_op_count = 0;
-		int mult_op_count = 0;
-
-		while(current_op) {
-			switch(current_op->opcode) {
-				case LOAD:   case LOADAI:   case LOADAO:
-				case CLOAD:  case CLOADAI:  case CLOADAO:
-				case STORE:  case STOREAI:  case STOREAO:
-				case CSTORE: case CSTOREAI: case CSTOREAO:
-					++load_store_op_count;
-					break;
-
-				case MULT:
-					++mult_op_count;
-					break;
-
-				case OUTPUT:
-					++output_op_count;
-					break;
-
-				default:
-					break;
-			}
-
-			current_op = current_op->next;
-			++op_count;
-		}
-
-		return (op_count > 2) << 3 | (load_store_op_count > 1) << 2 | (mult_op_count > 1) << 1 | (output_op_count > 1);
-	}
-
 
