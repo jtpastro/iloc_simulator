@@ -12,6 +12,87 @@
 #include "machine.h"
 #include "sim.h"
 
+** Simulador: parametrização
+  + Custos de cada instrução
+  + Tamanho do ciclo em segundos
+  + rarp e rbss
+  + argp -- https://github.com/schnorr/pajeng/blob/master/src/tools/pj_validate.cc
+ ** Simulador: saída
+ *** Seção de erro
+ + De acordo com o custo em ciclos de cada instrução, fornecer
+ métricas que indicam que o código de entrada está acessando
+ registrados e endereços de memória que nunca foram definidos por
+ nenhuma instrução previamente simulada
+ *** Seção de estatística
+ + Métricas quantitativas a respeito da simulação: tempo de
+ execução em ciclos, quantas instruções foram executadas, tempo
+ médio em ciclo por instrução, quantos registrados foram
+ utilizados, quantos labels, quantas posições de memória e toda
+ outra informação que tu achares útil rastrear
+ *** Seção de conteúdo
+ + Mostrar o conteúdo final dos registrados e dos endereços de
+ memória utilizados: o estado da máquina completo
+ */
+
+//static char doc[] = "Checks if FILE, or standard input, strictly follows the Paje file format definition";
+//static char args_doc[] = "[FILE]";
+static struct argp_option options[] = {
+    {"no-strict", 'n', 0, OPTION_ARG_OPTIONAL, "Support old field names in event definitions"},
+    {"quiet", 'q', 0, OPTION_ARG_OPTIONAL, "Be quiet"},
+    {"time", 't', 0, OPTION_ARG_OPTIONAL, "Print number of seconds to simulate input"},
+    {"flex", 'f', 0, OPTION_ARG_OPTIONAL, "Use flex-based file reader"},
+    { 0 }
+};
+
+struct arguments {
+    char *input[VALIDATE_INPUT_SIZE];
+    int rarp;
+    int rbss;
+    int quiet;
+    int time;
+    int flex;
+};
+
+static error_t parse_options (int key, char *arg, struct argp_state *state)
+{
+    struct arguments *arguments = (struct arguments*)(state->input);
+    switch (key){
+        case 'n': arguments->noStrict = 1; break;
+        case 't': arguments->time = 1; break;
+        case 'q': arguments->quiet = 1; break;
+        case 'f': arguments->flex = 1; break;
+        case ARGP_KEY_ARG:
+                  if (arguments->input_size == VALIDATE_INPUT_SIZE) {
+                      /* Too many arguments. */
+                      argp_usage (state);
+                  }
+                  arguments->input[state->arg_num] = arg;
+                  arguments->input_size++;
+                  break;
+        case ARGP_KEY_END:
+                  if (state->arg_num < 0) {
+                      /* Not enough arguments. */
+                      argp_usage (state);
+                  }
+                  break;
+        default: return ARGP_ERR_UNKNOWN;
+    }
+    return 0;
+}
+static struct argp argp = { options, parse_options, args_doc, doc };
+
+
+const char *argp_program_version =
+"ilocsim 0.1";
+const char *argp_program_bug_address =
+"<jtpastro@inf.ufrgs.br>";
+
+/* Program documentation. */
+static char doc[] =
+"ILOCsim -- a pretty simple iloc simulator";
+
+static struct argp argp = { 0, 0, 0, doc };
+
 int main(int argc, char** argv) {
     int mem_size = 0;
     int reg_size = 0;
@@ -19,7 +100,13 @@ int main(int argc, char** argv) {
     int machine_initialized = 0;
     Operation* code;
 
-    argp_parse (0, argc, argv, 0, 0, 0);
+    argp_parse (&argp, argc, argv, 0, 0, 0);
+
+    struct arguments arguments;
+    bzero (&arguments, sizeof(struct arguments));
+    if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
+        fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
+    }
 
     if (!machine_initialized)
         initialize_machine(reg_size,mem_size);
