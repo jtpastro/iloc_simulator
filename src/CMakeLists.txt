@@ -12,7 +12,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 )
 add_executable(sim
     sim.c
-    instruction.c
+    operation.c
     machine.c
     hash.c     
     ${BISON_MyParser_OUTPUTS}

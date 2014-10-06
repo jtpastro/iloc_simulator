@@ -1,11 +1,11 @@
-/*  instruction.c
+/*  operation.c
  *  written by Todd Waterman
  *  11/30/00 */
 
 #include <stdlib.h>
 #include <string.h>
 #include "hash.h"
-#include "instruction.h"
+#include "operation.h"
 
 Opcode opcode_specs[] =
 /*  name      string      srcs   consts labels defs   latency target_is_source */
@@ -56,28 +56,28 @@ Opcode opcode_specs[] =
 }; 
 
 
-/* Pointer to the first instruction of the parsed block */
+/* Pointer to the first operation of the parsed block */
 /* It is declared here so it is not visible to other programs that include
    the header file */
-extern Instruction* first_instruction;
+extern Operation* first_operation;
 extern int error_found;
 
 int yyparse();
 
-/* Run yyparse and return a pointer to the first instruction if no
+/* Run yyparse and return a pointer to the first operation if no
    errors occur, otherwise return NULL */
-Instruction* parse()
+Operation* parse()
 {
     opcode_init();
     yyparse();
     if (error_found)
     {
-	free_instructions(first_instruction);
+	free_operations(first_operation);
 	return NULL;
     }
     else
     {
-      return first_instruction;
+      return first_operation;
     }
 }
 
@@ -193,20 +193,6 @@ Label* get_label(int index)
     }
 
     return current_list->array[index];
-}
-
-/* Deallocate memory for a list of instructions */
-void free_instructions(Instruction* inst)
-{
-    Instruction* previous;
-
-    while(inst)
-    {
-	previous = inst;
-	inst = inst->next;
-	free_operations(previous->operations);
-	free(previous);
-    }
 }
 
 /* Deallocate memory for a list of operations */

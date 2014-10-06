@@ -12,7 +12,7 @@ NUM [0-9]+
   #include <stdio.h>
   #include <string.h>
 
-  #include "instruction.h"
+  #include "operation.h"
   #include "parser.h"
 
   int line_counter = 1;

@@ -8,7 +8,7 @@
   #include <stdio.h>
   #include <string.h>
   #include <stdlib.h>
-  #include "instruction.h"
+  #include "operation.h"
 
   #define MAX_ERROR_MESSAGE_LENGTH 100
 
@@ -27,14 +27,13 @@
   /* If an error is encountered during parsing this is changed to 1 */
   int error_found = 0;
 
-  /* Pointer to the first instruction */
-  Instruction* first_instruction;
+  /* Pointer to the first operation */
+  Operation* first_operation;
 
 %}
 
 %union {
     int ival;
-    Instruction* inst_ptr;
     Operation* op_ptr;
     Operands* operands_ptr;
     Operand* operand_ptr;
@@ -54,8 +53,6 @@
 %token <str> LABEL
 %token <str> TARGET
 
-%type <inst_ptr> instruction_list
-%type <inst_ptr> instruction
 %type <op_ptr> operation_list
 %type <op_ptr> operation
 %type <opcode_ptr> the_opcode
@@ -69,58 +66,33 @@
 
 %% /* Beginning of rules */
 
-iloc_program     : instruction_list
+iloc_program     : operation_list
                  {
-		     first_instruction = $1;
+		     first_operation = $1;
 		 }
                  ;
 
-instruction_list : instruction
+operation_list : operation
                  {
 		     $$ = $1;
 		 }
-                 | label_def instruction
+                 | label_def operation
                  {
 		     Label* label_definition = get_label($1);
 		     label_definition->target = $2;
 		     $$ = $2;
 		 }
-                 | instruction instruction_list
+                 | operation operation_list
                  {
 		     $1->next = $2;
 		     $$ = $1;
 		 }
-                 | label_def instruction instruction_list
+                 | label_def operation operation_list
                  {
 		     Label* label_definition = get_label($1);
 		     label_definition->target = $2;
 		     $2->next = $3;
 		     $$ = $2;
-		 }
-                 ;
-
-instruction      : operation
-                 {
-		     $$ = malloc(sizeof(Instruction));
-		     $$->operations = $1;
-		     $$->next = NULL;
-		 }
-                 | OPEN_BRACKET operation_list CLOSE_BRACKET
-                 {
-		     $$ = malloc(sizeof(Instruction));
-		     $$->operations = $2;
-		     $$->next = NULL;
-		 }
-                 ;
-
-operation_list   : operation
-                 {
-		     $$ = $1;
-		 }
-                 | operation SEMICOLON operation_list
-                 {
-		     $1->next = $3;
-		     $$ = $1;
 		 }
                  ;
 

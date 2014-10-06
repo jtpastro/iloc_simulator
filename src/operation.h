@@ -1,9 +1,9 @@
-/*  instruction.h
+/*  operation.h
  *  written by Todd Waterman
  *  11/30/00 */
 
-#ifndef _INSTRUCTION_H_
-#define _INSTRUCTION_H_
+#ifndef _OPERATION_H_
+#define _OPERATION_H_
 
 #define LABELS_PER_ARRAY 20
 
@@ -44,18 +44,11 @@ typedef struct operation {
     struct operation* next;
 } Operation;
 
-/* The Instruction structure represents a single instruction which can
-   consist of several operations. */
-typedef struct instruction {
-    Operation* operations;
-    struct instruction* next;
-} Instruction;
-
 /* The Label structure represents a label */
 typedef struct label {
     int identifier;
     char* string;
-    Instruction* target;
+    Operation* target;
     struct label* next;
 } Label;
 
@@ -79,9 +72,9 @@ typedef struct hashnode {
 
 Hashnode** hash_opcodes;
 
-/* Run yyparse and return a pointer to the first instruction if no
+/* Run yyparse and return a pointer to the first operation if no
    errors occur, otherwise return NULL */
-Instruction* parse();
+Operation* parse();
 
 
 /* Initialize the tables needed for get_opcode */
@@ -95,9 +88,6 @@ int insert_label(char*);
 
 /* Return label pointer associated with the index */
 Label* get_label(int);
-
-/* Deallocate memory for a list of instructions */
-void free_instructions(Instruction*);
 
 /* Deallocate memory for a list of operations */
 void free_operations(Operation*);
@@ -119,5 +109,5 @@ typedef struct operands {
     Operand* labels;
 } Operands;
 
-#endif /* _INSTRUCTION_H_ */
+#endif /* _OPERATION_H_ */
 
