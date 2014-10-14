@@ -12,56 +12,37 @@
 #include "machine.h"
 #include "sim.h"
 
-/** Simulador: parametrização
-  + Custos de cada instrução
-  + Tamanho do ciclo em segundos
-  + rarp e rbss
-  + argp -- https://github.com/schnorr/pajeng/blob/master/src/tools/pj_validate.cc
- ** Simulador: saída
- *** Seção de erro
- + De acordo com o custo em ciclos de cada instrução, fornecer
- métricas que indicam que o código de entrada está acessando
- registrados e endereços de memória que nunca foram definidos por
- nenhuma instrução previamente simulada
- *** Seção de estatística
- + Métricas quantitativas a respeito da simulação: tempo de
- execução em ciclos, quantas instruções foram executadas, tempo
- médio em ciclo por instrução, quantos registrados foram
- utilizados, quantos labels, quantas posições de memória e toda
- outra informação que tu achares útil rastrear
- *** Seção de conteúdo
- + Mostrar o conteúdo final dos registrados e dos endereços de
- memória utilizados: o estado da máquina completo
- */
-
-//static char doc[] = "Checks if FILE, or standard input, strictly follows the Paje file format definition";
-//static char args_doc[] = "[FILE]";
 static struct argp_option options[] = {
-    {"test", 't', 0, OPTION_ARG_OPTIONAL, "Test argp;"},
+    {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
+    {"output",		'o', "OUT_FORMAT", 0, "Output format"},
+    {"reg",		'r', "NUM_REG", 0, "Number of registers of the machine"},
+    {"mem",		'm', "MEM_SIZE", 0, "Memory size in words"},
+    {"start_pos",	'p', "LIM_LOW", 0, "Low frame limit"},
+    {"frame_size",	'f', "LIM_SIZE", 0, "Frame size"},
     { 0 }
 };
 
 struct arguments {
-    //char *args[VALIDATE_INPUT_SIZE];
-    int rarp;
-    int rbss;
-    int quiet;
-    int time;
-    int flex;
+    int frame_high;
+    int frame_low;
+    int num_reg;
+    int mem_size;
+    int output_format;
+    
+    char *costs_file;
+
 };
 
 static error_t parse_options (int key, char *arg, struct argp_state *state)
 {
     struct arguments *arguments = (struct arguments*)(state->input);
     switch (key){
-        case 't': arguments->time = 1; break;
-       /* case ARGP_KEY_ARG:
-                  if (arguments->input_size == VALIDATE_INPUT_SIZE) {
-                      argp_usage (state);
-                  }
-                  arguments->input[state->arg_num] = arg;
-                  arguments->input_size++;
-                  break;*/
+        case 'c': arguments->costs_file = arg; break;
+        case 'o': arguments->output_format = atoi(arg); break;
+        case 'r': arguments->num_reg = atoi(arg); break;
+        case 'm': arguments->mem_size = atoi(arg); break;
+        case 'b': arguments->frame_high = atoi(arg); break;
+        case 'f': arguments->frame_low = atoi(arg); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       /* Not enough arguments. */
@@ -84,24 +65,30 @@ const char *argp_program_bug_address =
 static char doc[] =
 "ILOCsim -- a pretty simple iloc simulator";
 
-static char args_doc[] = "ARG1";
+//static char args_doc[] = "ARG1";
 
-static struct argp argp = { options, parse_options, args_doc, doc };
+static struct argp argp = { options, parse_options, 0/*args_doc*/, doc };
 
 int main(int argc, char** argv) {
     int mem_size = 0;
     int reg_size = 0;
-    int current_argument = 1;
     int machine_initialized = 0;
     Operation* code;
 
-    argp_parse (&argp, argc, argv, 0, 0, 0);
-
     struct arguments arguments;
- 
+    
+    arguments.frame_high=0;
+    arguments.frame_low=0;
+    arguments.num_reg=0;
+    arguments.mem_size=0;
+    arguments.output_format=0;
+    arguments.costs_file="-";
+
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
         fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
     }
+    reg_size= arguments.num_reg;
+    mem_size= arguments.mem_size;
 
     if (!machine_initialized)
         initialize_machine(reg_size,mem_size);
