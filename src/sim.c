@@ -69,6 +69,20 @@ static char doc[] =
 
 static struct argp argp = { options, parse_options, 0/*args_doc*/, doc };
 
+void read_ints (const char* file_name)
+{
+  FILE* file = fopen (file_name, "r");
+  int l,i = 0;
+
+  fscanf (file, "%d", &l);    
+  while (!feof (file))
+    {  
+      opcode_specs[i++].latency=l;
+      fscanf (file, "%d", &l);      
+    }
+  fclose (file);        
+}
+
 int main(int argc, char** argv) {
     int mem_size = 0;
     int reg_size = 0;
@@ -82,13 +96,16 @@ int main(int argc, char** argv) {
     arguments.num_reg=0;
     arguments.mem_size=0;
     arguments.output_format=0;
-    arguments.costs_file="-";
+    arguments.costs_file="";
 
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
         fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
     }
     reg_size= arguments.num_reg;
     mem_size= arguments.mem_size;
+
+    if(arguments.costs_file[0]!='\0')
+        read_ints(arguments.costs_file);
 
     if (!machine_initialized)
         initialize_machine(reg_size,mem_size);
