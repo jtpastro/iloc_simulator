@@ -1,0 +1,38 @@
+L0: loadAI rarp, 0 => r0
+L1: storeAI r0 => rbss, 0
+L34: loadAI rbss, 0 => r23
+L35: loadI 0 => r24
+L36: cmp_EQ r23, r24 -> r22
+L37: cbr r22 -> L2, L30
+L2: nop
+L30: loadAI rbss, 0 => r20
+L31: loadI 1 => r21
+L32: cmp_EQ r20, r21 -> r19
+L33: cbr r19 -> L3, L4
+L3: nop
+L4: loadI 2 => r3
+L5: storeAI r3 => rbss, 4
+L6: loadI 0 => r4
+L7: storeAI r4 => rbss, 8
+L8: loadI 1 => r5
+L9: storeAI r5 => rbss, 12
+L10: loadI 1 => r6
+L11: storeAI r6 => rbss, 16
+L25: loadAI rbss, 4 => r17
+L26: loadAI rbss, 0 => r18
+L27: cmp_LT r17, r18 -> r16
+L29: cbr r16 -> L12, L24
+L12: loadAI rbss, 4 => r8
+L13: loadI 1 => r9
+L14: add r8, r9 => r7
+L15: storeAI r7 => rbss, 4
+L16: loadAI rbss, 12 => r10
+L17: storeAI r10 => rbss, 8
+L18: loadAI rbss, 16 => r11
+L19: storeAI r11 => rbss, 12
+L20: loadAI rbss, 8 => r13
+L21: loadAI rbss, 12 => r14
+L22: add r13, r14 => r12
+L23: storeAI r12 => rbss, 16
+L28: jumpI -> L25
+L24: nop

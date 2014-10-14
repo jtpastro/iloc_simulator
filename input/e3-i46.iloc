@@ -1,0 +1,82 @@
+L0: loadAI rarp, 0 => r0
+L1: storeAI r0 => rbss, 0
+L2: loadAI rarp, 4 => r1
+L3: storeAI r1 => rbss, 4
+L4: loadI 0 => r2
+L5: storeAI r2 => rbss, 8
+L6: loadI 0 => r3
+L7: storeAI r3 => rbss, 9
+L81: loadAI rbss, 0 => r47
+L82: loadI 0 => r48
+L83: cmp_LT r47, r48 -> r46
+L84: cbr r46 -> L8, L77
+L8: loadI 1 => r4
+L9: storeAI r4 => rbss, 8
+L10: loadAI rbss, 0 => r6
+L11: loadI 0 => r7
+L12: sub r7, r6 => r5
+L13: storeAI r5 => rbss, 0
+L77: loadAI rbss, 4 => r44
+L78: loadI 0 => r45
+L79: cmp_LT r44, r45 -> r43
+L80: cbr r43 -> L14, L20
+L14: loadI 1 => r8
+L15: storeAI r8 => rbss, 9
+L16: loadAI rbss, 4 => r10
+L17: loadI 0 => r11
+L18: sub r11, r10 => r9
+L19: storeAI r9 => rbss, 4
+L20: loadAI rbss, 0 => r12
+L21: storeAI r12 => rbss, 14
+L22: loadI 0 => r13
+L23: storeAI r13 => rbss, 10
+L72: loadAI rbss, 14 => r41
+L73: loadAI rbss, 4 => r42
+L74: cmp_GE r41, r42 -> r40
+L76: cbr r40 -> L24, L68
+L24: loadAI rbss, 10 => r15
+L25: loadI 1 => r16
+L26: add r15, r16 => r14
+L27: storeAI r14 => rbss, 10
+L28: loadAI rbss, 14 => r18
+L29: loadAI rbss, 4 => r19
+L30: sub r18, r19 => r17
+L31: storeAI r17 => rbss, 14
+L75: jumpI -> L72
+L68: loadAI rbss, 8 => r39
+L69: cbr r39 -> L62, L53
+L62: loadAI rbss, 9 => r38
+L67: cbr r38 -> L64, L66
+L64: loadI 0 => r37
+L65: jumpI -> L63
+L66: loadI 1 => r37
+L63: nop
+L70: cbr r37 -> L32, L53
+L32: loadAI rbss, 10 => r22
+L33: loadI 0 => r23
+L34: sub r23, r22 => r21
+L35: loadI 1 => r24
+L36: sub r21, r24 => r20
+L37: storeAI r20 => rbss, 10
+L53: loadAI rbss, 8 => r36
+L58: cbr r36 -> L55, L57
+L55: loadI 0 => r35
+L56: jumpI -> L54
+L57: loadI 1 => r35
+L54: nop
+L59: cbr r35 -> L52, L48
+L52: loadAI rbss, 9 => r34
+L60: cbr r34 -> L38, L48
+L38: loadAI rbss, 10 => r26
+L39: loadI 0 => r27
+L40: sub r27, r26 => r25
+L41: storeAI r25 => rbss, 10
+L48: loadAI rbss, 8 => r33
+L49: cbr r33 -> L47, L46
+L47: loadAI rbss, 9 => r32
+L50: cbr r32 -> L42, L46
+L42: loadAI rbss, 10 => r29
+L43: loadI 1 => r30
+L44: add r29, r30 => r28
+L45: storeAI r28 => rbss, 10
+L46: nop
