@@ -199,7 +199,7 @@ reg              : REGISTER
 		     $$ = malloc(sizeof(Operand));
 		     //$$->value = (int) strtol(yylval.ival, (char**) NULL, 10);
 		     $$->value = yylval.ival;
-		     //printf(" visited reg %d %s\n",(yylval.ival),&yytext[1]);
+		     
 		     $$->next = NULL;
 		 }
                  ;
@@ -225,7 +225,6 @@ lbl              : LABEL
 label_def        : TARGET
                  {
              char *myLabel = $1; 
-		     printf(" visited ");
 		     $$ = insert_label(strdup(myLabel));
 		 }
                  ;

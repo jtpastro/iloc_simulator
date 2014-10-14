@@ -12,7 +12,7 @@
 #include "machine.h"
 #include "sim.h"
 
-** Simulador: parametrização
+/** Simulador: parametrização
   + Custos de cada instrução
   + Tamanho do ciclo em segundos
   + rarp e rbss
@@ -37,15 +37,12 @@
 //static char doc[] = "Checks if FILE, or standard input, strictly follows the Paje file format definition";
 //static char args_doc[] = "[FILE]";
 static struct argp_option options[] = {
-    {"no-strict", 'n', 0, OPTION_ARG_OPTIONAL, "Support old field names in event definitions"},
-    {"quiet", 'q', 0, OPTION_ARG_OPTIONAL, "Be quiet"},
-    {"time", 't', 0, OPTION_ARG_OPTIONAL, "Print number of seconds to simulate input"},
-    {"flex", 'f', 0, OPTION_ARG_OPTIONAL, "Use flex-based file reader"},
+    {"test", 't', 0, OPTION_ARG_OPTIONAL, "Test argp;"},
     { 0 }
 };
 
 struct arguments {
-    char *input[VALIDATE_INPUT_SIZE];
+    //char *args[VALIDATE_INPUT_SIZE];
     int rarp;
     int rbss;
     int quiet;
@@ -57,18 +54,14 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
 {
     struct arguments *arguments = (struct arguments*)(state->input);
     switch (key){
-        case 'n': arguments->noStrict = 1; break;
         case 't': arguments->time = 1; break;
-        case 'q': arguments->quiet = 1; break;
-        case 'f': arguments->flex = 1; break;
-        case ARGP_KEY_ARG:
+       /* case ARGP_KEY_ARG:
                   if (arguments->input_size == VALIDATE_INPUT_SIZE) {
-                      /* Too many arguments. */
                       argp_usage (state);
                   }
                   arguments->input[state->arg_num] = arg;
                   arguments->input_size++;
-                  break;
+                  break;*/
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       /* Not enough arguments. */
@@ -79,7 +72,7 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
     }
     return 0;
 }
-static struct argp argp = { options, parse_options, args_doc, doc };
+
 
 
 const char *argp_program_version =
@@ -91,7 +84,9 @@ const char *argp_program_bug_address =
 static char doc[] =
 "ILOCsim -- a pretty simple iloc simulator";
 
-static struct argp argp = { 0, 0, 0, doc };
+static char args_doc[] = "ARG1";
+
+static struct argp argp = { options, parse_options, args_doc, doc };
 
 int main(int argc, char** argv) {
     int mem_size = 0;
@@ -103,7 +98,7 @@ int main(int argc, char** argv) {
     argp_parse (&argp, argc, argv, 0, 0, 0);
 
     struct arguments arguments;
-    bzero (&arguments, sizeof(struct arguments));
+ 
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
         fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
     }
@@ -122,26 +117,6 @@ int main(int argc, char** argv) {
 
     return 0;
 };
-
-/* Print a usage message */
-void print_help() {
-    printf("Usage: sim [options] < filename\n");
-    printf("  Options:\n");
-    printf("    -h                 display usage message\n");
-    printf("    -r NUM             simulator has NUM available registers\n");
-    printf("    -m NUM             simulator has NUM bytes of memory\n");
-    printf("    -s NUM             simulator stalls for the following conditions:\n");
-    printf("                         0:  nothing\n");
-    printf("                         1:  branches\n");
-    printf("                         2:  branches and memory interlocks\n");
-    printf("                         3:  branches and both register and memory interlocks\n");
-    printf("    -i NUM ... NUM     starting at the memory location specified by the first\n");
-    printf("                         NUM put the remaining NUMs into memory as words.\n");
-    printf("                         Must be the last option specified\n");
-    printf("    -c NUM ... NUM     same as -i, but puts the NUMs into memory as bytes\n");
-    printf("  filename should be a valid ILOC input file\n");
-
-}
 
 /* Simulate the code and output results to standard out */
 void simulate(Operation* code) {
@@ -180,10 +155,6 @@ void simulate(Operation* code) {
         list_of_effects = execute_changes(list_of_effects,&last_effect,&code);
         cycle_count++;
     }
-
-    fprintf(stdout,"Executed %d operations in %d cycles.\n",
-            operation_count,cycle_count);
-
 }
 
 /* Execute a single operation */
@@ -385,15 +356,14 @@ Change* execute_operation(Operation* op) {
             return effects;
             break;
 
-        case BR:
+        case JUMPI:
             effects = (Change*)malloc(sizeof(Change));
             effects->type = BRANCH;
             effects->target = (get_label(op->labels->value))->target;
-            effects->cycles_away = opcode_specs[BR].latency;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
             effects->next = NULL;
             return effects;
             break;
-
         case CBR:
             effects = (Change*)malloc(sizeof(Change));
             effects->type = BRANCH;
@@ -401,11 +371,88 @@ Change* execute_operation(Operation* op) {
                 effects->target = (get_label(op->labels->value))->target;
             else
                 effects->target = (get_label(op->labels->next->value))->target;
-            effects->cycles_away = opcode_specs[BR].latency;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
             effects->next = NULL;
             return effects;
             break;
-
+        case CBR_LT:
+            effects = (Change*)malloc(sizeof(Change));
+            effects->type = BRANCH;
+            if (get_register(op->srcs->value)<0)
+                effects->target = (get_label(op->labels->value))->target;
+            else
+                effects->target = (get_label(op->labels->next->value))->target;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
+            effects->next = NULL;
+            return effects;
+            break;
+        case CBR_LE:
+            effects = (Change*)malloc(sizeof(Change));
+            effects->type = BRANCH;
+            if (get_register(op->srcs->value)<=0)
+                effects->target = (get_label(op->labels->value))->target;
+            else
+                effects->target = (get_label(op->labels->next->value))->target;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
+            effects->next = NULL;
+            return effects;
+            break;
+        case CBR_EQ:
+            effects = (Change*)malloc(sizeof(Change));
+            effects->type = BRANCH;
+            if (get_register(op->srcs->value)==0)
+                effects->target = (get_label(op->labels->value))->target;
+            else
+                effects->target = (get_label(op->labels->next->value))->target;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
+            effects->next = NULL;
+            return effects;
+            break;
+        case CBR_GE:
+            effects = (Change*)malloc(sizeof(Change));
+            effects->type = BRANCH;
+            if (get_register(op->srcs->value)>=0)
+                effects->target = (get_label(op->labels->value))->target;
+            else
+                effects->target = (get_label(op->labels->next->value))->target;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
+            effects->next = NULL;
+            return effects;
+            break;
+        case CBR_GT:
+            effects = (Change*)malloc(sizeof(Change));
+            effects->type = BRANCH;
+            if (get_register(op->srcs->value)>0)
+                effects->target = (get_label(op->labels->value))->target;
+            else
+                effects->target = (get_label(op->labels->next->value))->target;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
+            effects->next = NULL;
+            return effects;
+            break;
+        case CBR_NE:
+            effects = (Change*)malloc(sizeof(Change));
+            effects->type = BRANCH;
+            if (get_register(op->srcs->value)!=0)
+                effects->target = (get_label(op->labels->value))->target;
+            else
+                effects->target = (get_label(op->labels->next->value))->target;
+            effects->cycles_away = opcode_specs[JUMPI].latency;
+            effects->next = NULL;
+            return effects;
+            break;
+	case COMP:
+            effects = onereg(op);
+            if (get_register(op->srcs->value) > 
+                    get_register(op->srcs->next->value))
+                effects->value = 1;
+            else if (get_register(op->srcs->value) == 
+                    get_register(op->srcs->next->value))
+                effects->value = 0;
+	    else
+                effects->value = -1;
+            return effects;
+            break;
         case CMPLT:
             effects = onereg(op);
             if (get_register(op->srcs->value) < 
