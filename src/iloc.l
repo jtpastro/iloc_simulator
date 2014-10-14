@@ -28,9 +28,11 @@ NUM [0-9]+
 \]            {return CLOSE_BRACKET;}
 \;            {return SEMICOLON;}
 \,            {return COMMA;}
-\=\>          {return ARROW;}
+[\=\-]\>      {return ARROW;}
 
-r{NUM}        {yylval.ival = atoi(&yytext[1]); return REGISTER;}
+r{NUM}        {yylval.ival = atoi(&yytext[1])+2; return REGISTER;}
+rarp          {yylval.ival = 0; return REGISTER;}
+rbss          {yylval.ival = 1; return REGISTER;}
 {NUM}         {yylval.ival = atoi(yytext); return NUMBER;}
 \-{NUM}       {yylval.ival = atoi(yytext); return NUMBER;}
 
