@@ -24,16 +24,20 @@ void initialize_machine(int reg_size, int mem_size)
     else
 	MEMORY_SIZE = mem_size;
 
-    register_bank = malloc(NUM_REGISTERS*sizeof(int));
+    register_bank = (Reg*)malloc(2*NUM_REGISTERS*sizeof(int));
 
-    for(i=0;i<NUM_REGISTERS;i++)
-	register_bank[i] = 0;
+    for(i=0;i<NUM_REGISTERS;i++){
+	    register_bank[i].data = 0;
+	    register_bank[i].accessed= 0;
+    }
 
 
-    memory_bank = (char*)malloc(MEMORY_SIZE*sizeof(char));
+    memory_bank = (Mem*)malloc(MEMORY_SIZE*(sizeof(char)+sizeof(int)));
 
-    for(i=0;i<MEMORY_SIZE;i++)
-	memory_bank[i] = 0;
+    for(i=0;i<MEMORY_SIZE;i++){
+	    memory_bank[i].data = 0;
+	    memory_bank[i].accessed = 0;
+    }
 
 }
 
@@ -64,7 +68,7 @@ void set_word(int location, int value)
 int get_register(int reg)
 {
     if (reg >= 0 && reg < NUM_REGISTERS)
-	return register_bank[reg];
+	return register_bank[reg].data;
     
     fprintf(stderr,"Simulator Error: Invalid register number r%d used.\n", reg);
     exit(1);
@@ -73,7 +77,7 @@ int get_register(int reg)
 void set_register(int reg, int value)
 {
     if (reg >= 0 && reg < NUM_REGISTERS)
-	register_bank[reg] = value;
+	register_bank[reg].data = value;
     else
     {
 	fprintf(stderr,"Simulator Error: Invalid register number r%d used.\n", reg);
@@ -85,7 +89,7 @@ void set_register(int reg, int value)
 char get_memory(int location)
 {
     if (location >= 0 && location < MEMORY_SIZE)
-	return memory_bank[location];
+	return memory_bank[location].data;
     
     fprintf(stderr,"Simulator Error: Invalid memory address %d accessed.\n", location);
     exit(1);
@@ -94,7 +98,7 @@ char get_memory(int location)
 void set_memory(int location,char value)
 {
     if (location >= 0 && location < MEMORY_SIZE)
-	memory_bank[location] = value;
+	memory_bank[location].data = value;
     else
     {
 	fprintf(stderr,"Simulator Error: Invalid memory address %d accessed.\n", location);

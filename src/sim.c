@@ -23,8 +23,8 @@ static struct argp_option options[] = {
 };
 
 struct arguments {
-    int frame_high;
-    int frame_low;
+    int frame_size;
+    int frame_start;
     int num_reg;
     int mem_size;
     int output_format;
@@ -41,8 +41,8 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
         case 'o': arguments->output_format = atoi(arg); break;
         case 'r': arguments->num_reg = atoi(arg); break;
         case 'm': arguments->mem_size = atoi(arg); break;
-        case 'b': arguments->frame_high = atoi(arg); break;
-        case 'f': arguments->frame_low = atoi(arg); break;
+        case 'p': arguments->frame_start = atoi(arg); break;
+        case 'f': arguments->frame_size = atoi(arg); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       /* Not enough arguments. */
@@ -91,8 +91,8 @@ int main(int argc, char** argv) {
 
     struct arguments arguments;
     
-    arguments.frame_high=0;
-    arguments.frame_low=0;
+    arguments.frame_size=0;
+    arguments.frame_start=0;
     arguments.num_reg=0;
     arguments.mem_size=0;
     arguments.output_format=0;

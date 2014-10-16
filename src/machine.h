@@ -16,11 +16,21 @@ int MEMORY_SIZE;
 #define DEFAULT_NUM_REGISTERS 256
 int NUM_REGISTERS;
 
+typedef struct reg_cell {
+    int data;
+    int accessed;
+} Reg;
+
+typedef struct mem_cell {
+    char data;
+    int accessed;
+} Mem;
+
 /* Array of registers */
-int* register_bank;
+Reg* register_bank;
 
 /* A character array that represents main memory */
-char* memory_bank;
+Mem* memory_bank;
 
 /* Initialize arrays used in the machine representation during the 
    simulation */
