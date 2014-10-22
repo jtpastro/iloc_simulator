@@ -48,5 +48,5 @@ int get_register(int);
 void set_register(int,int);
 char get_memory(int);
 void set_memory(int,char);
-
+void reg_state();
 #endif /* _MACHINE_H_ */   

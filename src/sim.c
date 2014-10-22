@@ -119,6 +119,7 @@ int main(int argc, char** argv) {
 
     simulate(code);
 
+    reg_state();
     return 0;
 };
 
