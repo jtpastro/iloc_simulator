@@ -41,13 +41,10 @@
   char *str;
 }
 
-%token OPEN_BRACKET
-%token CLOSE_BRACKET
-%token SEMICOLON
+%token LINE_BREAK
 %token COMMA
 %token ARROW
 %token OPCODE
-%token DOUTPUT
 %token REGISTER
 %token NUMBER
 %token <str> LABEL
@@ -96,7 +93,7 @@ operation_list : operation
 		 }
                  ;
 
-operation        : the_opcode operand_list ARROW operand_list
+operation        : the_opcode operand_list ARROW operand_list LINE_BREAK
                  {
 		     verify_args($1,$2->num_regs,$2->num_consts+$4->num_consts,
 				 $2->num_labels+$4->num_labels,$4->num_regs);
@@ -110,7 +107,7 @@ operation        : the_opcode operand_list ARROW operand_list
 		     free($2);
 		     free($4);
 		 }
-                 | the_opcode operand_list
+                 | the_opcode operand_list LINE_BREAK
                  {
 		     verify_args($1,$2->num_regs,$2->num_consts,$2->num_labels,0);
 		     $$ = malloc(sizeof(Operation));
@@ -122,7 +119,7 @@ operation        : the_opcode operand_list ARROW operand_list
 		     $$->next = NULL;
 		     free($2);
 		 }
-                 | the_opcode ARROW operand_list
+                 | the_opcode ARROW operand_list LINE_BREAK
                  {
 		     verify_args($1,0,$3->num_consts,$3->num_labels,$3->num_regs);
 		     $$ = malloc(sizeof(Operation));
@@ -134,7 +131,7 @@ operation        : the_opcode operand_list ARROW operand_list
 		     $$->next = NULL;
 		     free($3);
 		 }
-                 | the_opcode
+                 | the_opcode LINE_BREAK
                  {
 		     verify_args($1,0,0,0,0);
 		     $$ = malloc(sizeof(Operation));
