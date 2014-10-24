@@ -119,15 +119,12 @@ int main(int argc, char** argv) {
 
     simulate(code);
 
-    reg_state();
+    //reg_state();
     return 0;
 };
 
 /* Simulate the code and output results to standard out */
 void simulate(Operation* code) {
-    Change* list_of_effects = NULL; 
-    Change* last_effect = NULL;
-    Change* new_effects;
     int operation_count = 0;
     int cycle_count = 0;
 
@@ -136,34 +133,14 @@ void simulate(Operation* code) {
     while(code) {
         new_effects = execute_operation(code);
         operation_count++;
-        if (!list_of_effects) {
-            list_of_effects = new_effects;
-            last_effect = new_effects;
-        }
-        else
-            last_effect->next = new_effects;
 
-        /* Move last effect to end */
-        if (last_effect)
-            while(last_effect->next)
-                last_effect = last_effect->next;
-
-        /* Go to next operation */
+        cycle_count += opcode_specs[op->opcode].latency;
         code = code->next;
-
-        list_of_effects = execute_changes(list_of_effects,&last_effect,&code);
-        cycle_count++;
-
-    }
-
-    while(list_of_effects) {
-        list_of_effects = execute_changes(list_of_effects,&last_effect,&code);
-        cycle_count++;
     }
 }
 
 /* Execute a single operation */
-Change* execute_operation(Operation* op) {
+Machine execute_operation(Operation* op) {
     Change* effects;
     Change* effect_ptr;
     int i;
@@ -556,75 +533,3 @@ Change* execute_operation(Operation* op) {
             break;
     }
 }
-
-/* onereg creates most of a change structure for the common case where 
-   a single register is defined. */
-Change* onereg(Operation* op) {
-    Change* effect = (Change*)malloc(sizeof(Change));
-    effect->type = REGISTER;
-    effect->location = op->defs->value;
-    effect->cycles_away = opcode_specs[op->opcode].latency;
-    effect->next = NULL;
-    return effect;
-}
-
-/* storeop creates most of a change structure for a store operation */
-Change* storeop(Operation* op) {
-    Change* effect = (Change*)malloc(sizeof(Change));
-    effect->type = MEMORY;
-    effect->cycles_away = opcode_specs[op->opcode].latency;
-    effect->next = NULL;
-    return effect;
-}
-
-
-/* Reduces the cycles_away of all changes by one and executes any changes
-   that have a cycles_away of 0 */
-Change* execute_changes(Change* changes, Change** last_change_ptr, Operation** code_ptr) {
-    Change* first_change = changes;
-    Change* prev_change = NULL;
-
-    /* Iterate through all changes */
-    while(changes) {
-        changes->cycles_away -= 1;
-
-        if (changes->cycles_away == 0) {
-            /* Perform effect */
-            switch(changes->type) {
-                case REGISTER:
-                    set_register(changes->location,changes->value);
-                    break;
-                case MEMORY:
-                    set_memory(changes->location,changes->value);
-                    break;
-                case BRANCH:
-                    *code_ptr = changes->target;
-                    break;
-                case DISPLAY:
-                    fprintf(stdout,"%d\n",changes->value);
-                    break;
-            }
-
-            /* Delete change record */
-            if (prev_change) {
-                prev_change->next = changes->next;
-                free(changes);
-                changes = prev_change->next;
-            }
-            else {
-                first_change = changes->next;
-                free(changes);
-                changes = first_change;
-            }
-        }
-        else {
-            prev_change = changes;
-            changes = changes->next;
-        }
-
-    }
-
-    *last_change_ptr = prev_change;
-    return (first_change);
-}
-

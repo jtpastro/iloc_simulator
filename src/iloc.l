@@ -24,6 +24,9 @@ NUM [0-9]+
 
 %%
 
+\[            {return OPEN_BRACKET;}
+\]            {return CLOSE_BRACKET;}
+\;            {return SEMICOLON;}
 \,            {return COMMA;}
 [\=\-]\>      {return ARROW;}
 
@@ -53,7 +56,7 @@ rbss          {yylval.ival = 1; return REGISTER;}
 
 \/\/[^\n]*  { /* Comment */}
 
-[\n]+         {line_counter++; return LINE_BREAK;}
+[\n]          {line_counter++;}
 
 {WHITESPACE}  {;}
 

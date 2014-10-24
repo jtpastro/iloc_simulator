@@ -21,6 +21,12 @@
   extern int line_counter;
   extern Opcode* current_opcode;
 
+  typedef struct operands {
+        vector<int> regs;
+        vector<int> consts;
+        vector<int> labels;
+  } Operands;
+
   /* This function must be defined */
   void yyerror(char*);
 
@@ -34,17 +40,20 @@
 
 %union {
     int ival;
-    Operation* op_ptr;
-    Operands* operands_ptr;
-    Operand* operand_ptr;
-    Opcode* opcode_ptr;
-  char *str;
+    vector<Operation> op_ptr;
+    vector<Operands> operands_ptr;
+    vector<Operand> operand_ptr;
+    vector<Opcode> opcode_ptr;
+    string str;
 }
 
-%token LINE_BREAK
+%token OPEN_BRACKET
+%token CLOSE_BRACKET
+%token SEMICOLON
 %token COMMA
 %token ARROW
 %token OPCODE
+%token DOUTPUT
 %token REGISTER
 %token NUMBER
 %token <str> LABEL
@@ -75,7 +84,7 @@ operation_list : operation
 		 }
                  | label_def operation
                  {
-		     Label* label_definition = get_label($1);
+		        Label* label_definition = get_label($1);
 		     label_definition->target = $2;
 		     $$ = $2;
 		 }
@@ -93,7 +102,7 @@ operation_list : operation
 		 }
                  ;
 
-operation        : the_opcode operand_list ARROW operand_list LINE_BREAK
+operation        : the_opcode operand_list ARROW operand_list
                  {
 		     verify_args($1,$2->num_regs,$2->num_consts+$4->num_consts,
 				 $2->num_labels+$4->num_labels,$4->num_regs);
@@ -107,7 +116,7 @@ operation        : the_opcode operand_list ARROW operand_list LINE_BREAK
 		     free($2);
 		     free($4);
 		 }
-                 | the_opcode operand_list LINE_BREAK
+                 | the_opcode operand_list
                  {
 		     verify_args($1,$2->num_regs,$2->num_consts,$2->num_labels,0);
 		     $$ = malloc(sizeof(Operation));
@@ -119,7 +128,7 @@ operation        : the_opcode operand_list ARROW operand_list LINE_BREAK
 		     $$->next = NULL;
 		     free($2);
 		 }
-                 | the_opcode ARROW operand_list LINE_BREAK
+                 | the_opcode ARROW operand_list
                  {
 		     verify_args($1,0,$3->num_consts,$3->num_labels,$3->num_regs);
 		     $$ = malloc(sizeof(Operation));
@@ -131,7 +140,7 @@ operation        : the_opcode operand_list ARROW operand_list LINE_BREAK
 		     $$->next = NULL;
 		     free($3);
 		 }
-                 | the_opcode LINE_BREAK
+                 | the_opcode
                  {
 		     verify_args($1,0,0,0,0);
 		     $$ = malloc(sizeof(Operation));
