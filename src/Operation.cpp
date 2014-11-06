@@ -58,7 +58,7 @@ std::map<std::string,Opcode_Name> Operation::init() {
     std::map<std::string,Opcode_Name> m;
     /* Create empty table */
     for(i=0;i<INVALID_OP;i++){
-        m.at(opcode_specs[i].str) = opcode_specs[i].name; 
+        m[opcode_specs[i].str] = opcode_specs[i].name; 
     }
     return m;
 }

@@ -5,19 +5,18 @@
 void Program::add_operation(Operation op){
     for(std::string it : op.labels){
         if(symbol_table.count(it)==0){
-            symbol_table.at(it) = -1;
+            symbol_table[it] = -1;
             missing_refs++;
         }
     }
     op_list.push_back(op);
-        
 }
  
 void Program::add_operation(std::string lbl, Operation op){
     if(symbol_table.count(lbl)==0){
-        symbol_table.at(lbl) = op_list.size();
-    } else if(symbol_table.at(lbl) == -1){
-        symbol_table.at(lbl) = op_list.size();
+        symbol_table[lbl] = op_list.size();
+    } else if(symbol_table[lbl] == -1){
+        symbol_table[lbl] = op_list.size();
         missing_refs--;
     } else {
         fprintf(stderr,"Simulator Error: Repeated label declaration");

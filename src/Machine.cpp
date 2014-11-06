@@ -1,22 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <exception>
 #include "Machine.hpp"
 
-Machine::Machine(uint reg_size, uint mem_size)
+Machine::Machine(uint reg_size, uint mem_size, Program prog)
 {
-    uint i;
+    program = prog;
+    PC = 0;
     if (reg_size > 0)
         NUM_REGISTERS = reg_size;
     if (mem_size > 0)
         MEMORY_SIZE = mem_size;
     register_bank.resize(NUM_REGISTERS);
     memory_bank.resize(MEMORY_SIZE);
+}\
+
+Machine::Machine(State state, Program prog)
+{
+    Program program = prog;
+    PC = state.PC;
+    register_bank = state.register_bank;
+    memory_bank = state.memory_bank;
+    NUM_REGISTERS = register_bank.size();
+    MEMORY_SIZE = memory_bank.size();
 }
 
 int Machine::get_register(uint reg)
 {
-    if (reg >= 0 && reg < NUM_REGISTERS)
+    if (reg < NUM_REGISTERS)
         return register_bank[reg].data;
     fprintf(stderr,"Simulator Error: Invalid register number r%d used.\n", reg);
     exit(EXIT_FAILURE);
@@ -24,7 +36,7 @@ int Machine::get_register(uint reg)
 
 void Machine::set_register(uint reg, int value)
 {
-    if (reg >= 0 && reg < NUM_REGISTERS){
+    if (reg < NUM_REGISTERS){
         register_bank[reg].data = value;
         register_bank[reg].accessed = true;
     } else {
@@ -35,15 +47,24 @@ void Machine::set_register(uint reg, int value)
 
 char Machine::get_memory(uint location)
 {
-    if (location >= 0 && location < MEMORY_SIZE)
+    if (location < MEMORY_SIZE)
         return memory_bank[location].data; 
     fprintf(stderr,"Simulator Error: Invalid memory address %d accessed.\n", location);
     exit(EXIT_FAILURE);
 }
 
+int Machine::get_word(uint location)
+{
+    int value = ((int)(unsigned char)get_memory(location) << 24 | 
+		 (int)(unsigned char)get_memory(location+1) << 16 |
+		 (int)(unsigned char)get_memory(location+2) << 8 | 
+		 (int)(unsigned char)get_memory(location+3));
+    return(value);
+}
+
 void Machine::set_memory(uint location,char value)
 {
-    if (location >= 0 && location < MEMORY_SIZE){
+    if (location < MEMORY_SIZE){
         memory_bank[location].data = value;
         memory_bank[location].accessed = true;
     } else {
@@ -66,11 +87,18 @@ void Machine::mem_state(){
     }
 }
 
-Machine Machine::execute_next(Program program){
-    Operation op = program.get_operation(PC); 
-    Machine new_state = *this;
-    new_state.execute_operation(op);
-    return new_state;
+void Machine::run(){
+    try {
+        while(true){ execute_operation(); }
+    } catch(std::exception& e) {}
+}
+
+State Machine::execute_next(){
+    execute_operation();
+    State state;
+    //state.PC = PC;
+    //state.register_bank = register_bank;
+    return state;
 }
 
 void Machine::onereg(Operation op, int value){ 
@@ -78,7 +106,8 @@ void Machine::onereg(Operation op, int value){
     PC++;
 }
 
-void Machine::execute_operation(Operation op){
+void Machine::execute_operation(){
+    Operation op = program.get_operation(PC); 
     int i;
     int result;
     uint location;
@@ -216,50 +245,50 @@ void Machine::execute_operation(Operation op){
             PC++;
             break;
         case JUMPI:
-            PC = (get_label(op.labels[0]));
+            PC = (program.get_label(op.labels[0]));
             
             break;
         case CBR:
             if (get_register(op.srcs[0]))
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case CBR_LT:
             if (get_register(op.srcs[0])<0)
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case CBR_LE:
             if (get_register(op.srcs[0])<=0)
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case CBR_EQ:
             if (get_register(op.srcs[0])==0)
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case CBR_GE:
             if (get_register(op.srcs[0])>=0)
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case CBR_GT:
             if (get_register(op.srcs[0])>0)
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case CBR_NE:
             if (get_register(op.srcs[0])!=0)
-                PC = (get_label(op.labels[0]));
+                PC = (program.get_label(op.labels[0]));
             else
-                PC = (get_label(op.labels[1]));
+                PC = (program.get_label(op.labels[1]));
             break;
         case COMP:
             if (get_register(op.srcs[0]) > 
@@ -331,11 +360,13 @@ void Machine::execute_operation(Operation op){
             onereg(op,result);
             break;
         case OUTPUT:
-            printf("%d\n", get_word(op.consts[0]));
+            if (!quiet)
+                printf("%d\n", get_word(op.consts[0]));
             PC++;
             break;
         case COUTPUT:
-            printf("%d\n", get_memory(op.consts[0]));
+            if (!quiet)
+                printf("%d\n", get_memory(op.consts[0]));
             PC++;
             break;
         default:
@@ -343,10 +374,4 @@ void Machine::execute_operation(Operation op){
             exit(EXIT_FAILURE);
             break;
     }
-}
-
-int main () {
-    Machine rect(0,0);
-    rect.reg_state();
-    return 0;
 }

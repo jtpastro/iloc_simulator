@@ -1,7 +1,7 @@
 CC=g++
-CFLAGS=-c -Wall -std=c++11
+CFLAGS=-c -g -Wall -std=c++11
 LDFLAGS=
-SOURCES=Test.cpp Operation.cpp Program.cpp
+SOURCES=Test.cpp Operation.cpp Program.cpp Machine.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=test
 

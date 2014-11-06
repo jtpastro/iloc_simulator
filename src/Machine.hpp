@@ -1,24 +1,33 @@
 #include <vector>
-#include "Operation.hpp"
+#include "Program.hpp"
 
-/* The default number of bytes of addressable memory starting from 0 */
 #define DEFAULT_MEMORY_SIZE 32768
-/* The default number of registers */
 #define DEFAULT_NUM_REGISTERS 256
 typedef unsigned int uint;
 typedef unsigned char uchar;
-typedef struct reg_cell {
-    int data;
-    bool accessed;
-} Reg;
 
-typedef struct mem_cell {
-    char data;
-    bool accessed;
-} Mem;
+class Reg{
+    public:
+        int data;
+        bool accessed;
+};
+
+class Mem {
+    public:
+        char data;
+        bool accessed;
+};
+
+class State {
+    public:
+        uint PC;
+        std::vector<Mem> memory_bank;
+        std::vector<Reg> register_bank;
+};
 
 class Machine {
         uint PC;
+        Program program;
         std::vector<Mem> memory_bank;
         std::vector<Reg> register_bank;
         uint MEMORY_SIZE = DEFAULT_MEMORY_SIZE;
@@ -30,10 +39,13 @@ class Machine {
         void set_register(uint,int);
         void set_memory(uint,char);
         void onereg(Operation, int);
-        void execute_operation(Operation);
+        void execute_operation();
     public:
-        Machine(uint, uint);
-        Machine execute_next(std::vector<Operation>);
+        bool quiet=false;
+        Machine(uint, uint, Program);
+        Machine(State, Program);
+        State execute_next();
+        void run();
         void reg_state();
         void mem_state();
         void prog_state();
