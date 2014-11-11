@@ -14,12 +14,12 @@
 #include "sim.h"
 
 static struct argp_option options[] = {
-    {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
+    {"costs",		'c', "COST_FILE", 0, "Config file with instruction cost"},
     {"output",		'o', "OUT_FORMAT", 0, "Output format"},
-    {"reg",		'r', "NUM_REG", 0, "Number of registers of the machine"},
-    {"mem",		'm', "MEM_SIZE", 0, "Memory size in words"},
-    {"stack_size",	's', "STACK_SIZE", 0, "Maximum stack size"},
+    {"reg",		'r', "NUM_REG", 0, "Maximum number of registers"},
+    {"mem",		'm', "MEM_SIZE", 0, "Memory size in words (of 4 bytes)"},
     {"stack_start",	'p', "STACK_START", 0, "Base memory address for stack"},
+    {"stack_size",	's', "STACK_SIZE", 0, "Maximum stack size (in bytes)"},
     { 0 }
 };
 
