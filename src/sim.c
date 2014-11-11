@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <argp.h>
 #include "operation.h"
 #include "machine.h"
@@ -90,14 +91,8 @@ int main(int argc, char** argv) {
     Operation* code;
 
     struct arguments arguments;
+    bzero (&arguments, sizeof (struct arguments));
     
-    arguments.frame_size=0;
-    arguments.frame_start=0;
-    arguments.num_reg=0;
-    arguments.mem_size=0;
-    arguments.output_format=0;
-    arguments.costs_file="";
-
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
         fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
     }
