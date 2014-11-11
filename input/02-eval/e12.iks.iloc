@@ -1,0 +1,10 @@
+l2: nop
+addI rbss,0 => r1
+load r1 => r2
+cbr r2 => l1, l3
+l1: nop
+loadI 0 => r3
+addI rbss,0 => r4
+store r3 => r4
+jumpI => l2
+l3: nop

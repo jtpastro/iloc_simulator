@@ -1,0 +1,9 @@
+loadI 0 => r1
+loadI 1 => r2
+add r1, r2 => r3
+loadI 2 => r4
+add r3, r4 => r5
+loadI 3 => r6
+add r5, r6 => r7
+addI rbss,0 => r8
+store r7 => r8

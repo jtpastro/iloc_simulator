@@ -1,0 +1,20 @@
+addI rbss,0 => r1
+load r1 => r2
+cbr r2 => l4, l3
+l3: nop
+addI rbss,0 => r3
+load r3 => r4
+cbr r4 => l2, l1
+l2: nop
+addI rbss,0 => r5
+load r5 => r6
+and r4, r6 => r4
+l1: nop
+or r2, r4 => r2
+l4: nop
+cbr r2 => l5, l6
+l5: nop
+loadI 0 => r7
+addI rbss,0 => r8
+store r7 => r8
+l6: nop

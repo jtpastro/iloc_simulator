@@ -1,0 +1,3 @@
+loadI 0 => r1
+addI rarp,0 => r2
+store r1 => r2
