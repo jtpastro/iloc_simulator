@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     reg_size= arguments.num_reg;
     mem_size= arguments.mem_size;
 
-    if(arguments.costs_file[0]!='\0')
+    if(arguments.costs_file != NULL)
         read_ints(arguments.costs_file);
 
     if (!machine_initialized)
