@@ -19,12 +19,12 @@ static struct argp_option options[] = {
     {"reg",		'r', "NUM_REG", 0, "Number of registers of the machine"},
     {"mem",		'm', "MEM_SIZE", 0, "Memory size in words"},
     {"start_pos",	'p', "LIM_LOW", 0, "Low frame limit"},
-    {"frame_size",	'f', "LIM_SIZE", 0, "Frame size"},
+    {"stack_size",	's', "STACK_SIZE", 0, "Maximum stack size"},
     { 0 }
 };
 
 struct arguments {
-    int frame_size;
+    int stack_size;
     int frame_start;
     int num_reg;
     int mem_size;
@@ -43,7 +43,7 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
         case 'r': arguments->num_reg = atoi(arg); break;
         case 'm': arguments->mem_size = atoi(arg); break;
         case 'p': arguments->frame_start = atoi(arg); break;
-        case 'f': arguments->frame_size = atoi(arg); break;
+        case 's': arguments->stack_size = atoi(arg); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       /* Not enough arguments. */
