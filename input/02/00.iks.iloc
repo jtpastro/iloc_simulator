@@ -1,0 +1,15 @@
+loadI 1 => r1
+addI rbss,0 => r2
+store r1 => r2
+loadI 9 => r3
+addI rbss,4 => r4
+store r3 => r4
+addI rbss,0 => r5
+load r5 => r6
+loadI 721 => r7
+sub r6, r7 => r8
+addI rbss,4 => r9
+load r9 => r10
+div r8, r10 => r11
+addI rbss,0 => r12
+store r11 => r12

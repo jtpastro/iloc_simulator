@@ -1,0 +1,13 @@
+loadI 111 => r1
+addI rbss,4 => r2
+store r1 => r2
+loadI 222 => r3
+addI rbss,0 => r4
+store r3 => r4
+addI rbss,0 => r5
+load r5 => r6
+addI rbss,4 => r7
+load r7 => r8
+mult r6, r8 => r9
+addI rbss,0 => r10
+store r9 => r10

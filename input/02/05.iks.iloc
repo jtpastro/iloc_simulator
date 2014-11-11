@@ -1,0 +1,3 @@
+loadI 123456 => r1
+addI rbss,0 => r2
+store r1 => r2

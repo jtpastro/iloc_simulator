@@ -1,0 +1,42 @@
+loadI 2 => r1
+addI rbss,12 => r2
+store r1 => r2
+loadI 0 => r3
+addI rbss,4 => r4
+store r3 => r4
+loadI 1 => r5
+addI rbss,8 => r6
+store r5 => r6
+loadI 0 => r7
+addI rbss,0 => r8
+store r7 => r8
+l2: nop
+addI rbss,12 => r9
+load r9 => r10
+loadI 32 => r11
+cmp_LE r10, r11 => r12
+cbr r12 => l1, l3
+l1: nop
+addI rbss,4 => r13
+load r13 => r14
+addI rbss,8 => r15
+load r15 => r16
+add r14, r16 => r17
+addI rbss,0 => r18
+store r17 => r18
+addI rbss,8 => r19
+load r19 => r20
+addI rbss,4 => r21
+store r20 => r21
+addI rbss,0 => r22
+load r22 => r23
+addI rbss,8 => r24
+store r23 => r24
+addI rbss,12 => r25
+load r25 => r26
+loadI 1 => r27
+add r26, r27 => r28
+addI rbss,12 => r29
+store r28 => r29
+jumpI => l2
+l3: nop
