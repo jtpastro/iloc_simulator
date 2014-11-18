@@ -1,0 +1,3 @@
+parsing error
+invalid opcode
+memory access

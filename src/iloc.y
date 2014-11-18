@@ -1,50 +1,23 @@
-/* iloc.y
- * Yacc specification for the ILOC subset defined in
- * "Engineering a Compiler" by Cooper and Torczon
- * written by Todd Waterman
- * 11/30/00 */
-
 %{
   #include <stdio.h>
   #include <string.h>
   #include <stdlib.h>
-  #include "operation.h"
+  #include "Machine.hpp"
 
   #define MAX_ERROR_MESSAGE_LENGTH 100
-
-  Operands* new_operands(void);
-  Operand* append_operands(Operand*,Operand*);
-  int verify_args(Opcode*,int,int,int,int);
 
   extern char yytext[];
 
   extern int line_counter;
-  extern Opcode* current_opcode;
-
-  typedef struct operands {
-        vector<int> regs;
-        vector<int> consts;
-        vector<int> labels;
-  } Operands;
-
-  /* This function must be defined */
-  void yyerror(char*);
-
-  /* If an error is encountered during parsing this is changed to 1 */
-  int error_found = 0;
-
-  /* Pointer to the first operation */
-  Operation* first_operation;
 
 %}
 
 %union {
     int ival;
-    vector<Operation> op_ptr;
-    vector<Operands> operands_ptr;
-    vector<Operand> operand_ptr;
-    vector<Opcode> opcode_ptr;
-    string str;
+    Program *program;
+    Operation *operation;
+    Opcode opcode;
+    std::string str;
 }
 
 %token OPEN_BRACKET
@@ -59,14 +32,14 @@
 %token <str> LABEL
 %token <str> TARGET
 
-%type <op_ptr> operation_list
-%type <op_ptr> operation
-%type <opcode_ptr> the_opcode
-%type <operands_ptr> operand_list
-%type <operand_ptr> reg
-%type <operand_ptr> const
-%type <operand_ptr> lbl
-%type <ival> label_def
+%type <program> operation_list
+%type <operation> operation
+%type <operation> operand_list
+%type <opcode> the_opcode
+%type <ival> reg
+%type <ival> const
+%type <str> lbl
+%type <str> label_def
 
 %start iloc_program
 
@@ -78,85 +51,52 @@ iloc_program     : operation_list
 		 }
                  ;
 
-operation_list : operation
-                 {
-		     $$ = $1;
+operation_list : operation {
+                    $$ = new Program();
+                    $$->add_operation($1);
+                }
+                | label_def operation {
+                    $$ = new Program();
+		            $$->add_operation($1, $2);
+                }
+                | operation operation_list
+                {
+                    $$ = $1;
+                    $$->add_operation($$);
+                }
+                | label_def operation operation_list
+                {
+                    $$ = $2;
+                    program.add_operation($1, $$);
+                };
+operation       : the_opcode operand_list ARROW operand_list
+                {
+                    $2->opcode = $1;
+		            $2->merge($4);
+                    $2->verify_operation();
+                    $$=$2;
+		            free($4);
 		 }
-                 | label_def operation
-                 {
-		        Label* label_definition = get_label($1);
-		     label_definition->target = $2;
-		     $$ = $2;
-		 }
-                 | operation operation_list
-                 {
-		     $1->next = $2;
-		     $$ = $1;
-		 }
-                 | label_def operation operation_list
-                 {
-		     Label* label_definition = get_label($1);
-		     label_definition->target = $2;
-		     $2->next = $3;
-		     $$ = $2;
-		 }
-                 ;
-
-operation        : the_opcode operand_list ARROW operand_list
-                 {
-		     verify_args($1,$2->num_regs,$2->num_consts+$4->num_consts,
-				 $2->num_labels+$4->num_labels,$4->num_regs);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = $2->regs;
-		     $$->consts = append_operands($2->consts,$4->consts);
-		     $$->labels = append_operands($2->labels,$4->labels);
-		     $$->defs = $4->regs;
-		     $$->next = NULL;
-		     free($2);
-		     free($4);
-		 }
-                 | the_opcode operand_list
-                 {
-		     verify_args($1,$2->num_regs,$2->num_consts,$2->num_labels,0);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = $2->regs;
-		     $$->consts = $2->consts;
-		     $$->labels = $2->labels;
-		     $$->defs = NULL;
-		     $$->next = NULL;
-		     free($2);
-		 }
-                 | the_opcode ARROW operand_list
-                 {
-		     verify_args($1,0,$3->num_consts,$3->num_labels,$3->num_regs);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = NULL;
-		     $$->consts = $3->consts;
-		     $$->labels = $3->labels;
-		     $$->defs = $3->regs;
-		     $$->next = NULL;
-		     free($3);
-		 }
-                 | the_opcode
-                 {
-		     verify_args($1,0,0,0,0);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = NULL;
-		     $$->consts = NULL;
-		     $$->labels = NULL;
-		     $$->defs = NULL;
-		     $$->next = NULL;
-		 }
+                 | the_opcode operand_list {
+                    $2->opcode = $1;
+                    $2->verify_operation();
+                    $$=$2;
+		         }
+                 | the_opcode ARROW operand_list { 
+                    $3->opcode = $1;
+                    $3->verify_operation();
+                    $$=$3;
+		         }
+                 | the_opcode {
+                    $$ = new Operation();
+                    $$->opcode = $1;
+		         }
                  ;
 
 the_opcode       : OPCODE
                  {
-		     $$ = current_opcode;
-		 }
+		            $$ = current_opcode;
+		         }
                  ;
 
 operand_list     : reg
@@ -187,14 +127,12 @@ operand_list     : reg
 		 }
                  | lbl
                  {
-		     $$ = new_operands();
-		     $$->num_labels = 1;
-		     $$->labels = $1;
-		 }
+		            $$ = $1
+		         }
                  | lbl COMMA operand_list
                  {
-		     $$ = $3;
-		     $$->num_labels += 1;
+		            $$ = $3;
+		            $$->num_labels += 1;
 		     $1->next = $$->labels;
 		     $$->labels = $1;
 		 }
@@ -212,10 +150,7 @@ reg              : REGISTER
 
 const            : NUMBER
                  {
-		     $$ = malloc(sizeof(Operand));
-		     $$->value = yylval.ival;
-		     //printf(" \n Const: %d \n", yylval.ival);
-		     $$->next = NULL;
+		            $$ = yylval.ival;
 		 }
 		 ;
 
@@ -235,90 +170,5 @@ label_def        : TARGET
 		 }
                  ;
 
-%% /* Support Code */
-
-/* Create a new initialized Operands structure */
-Operands* new_operands()
-{
-    Operands* operands_ptr = malloc(sizeof(Operands));
-    operands_ptr->num_regs = 0;
-    operands_ptr->regs = NULL;
-    operands_ptr->num_consts = 0;
-    operands_ptr->consts = NULL;
-    operands_ptr->num_labels = 0;
-    operands_ptr->labels = NULL;
+%%
     
-    return(operands_ptr);
-}
-
-/* Append the second list of operands to the end of the first */
-Operand* append_operands(Operand* list1, Operand* list2)
-{
-    Operand* start = list1;
-
-    if (!list1)
-	return list2;
-    
-    while(list1->next)
-	list1 = list1->next;
-
-    list1->next = list2;
-
-    return(start);
-}
-
-/* Make sure that the operation was called with the correct number and type
-   of arguments */
-int verify_args(Opcode* operation,int srcs, int consts, int labels, int defs)
-{
-    char* error_message;
-
-    if (operation->srcs != srcs)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of source registers",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-    
-    if (operation->consts != consts)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of constants",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-
-    if (operation->labels != labels)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of labels",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-
-    if (operation->defs != defs)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of defined registers",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-
-    return 1;
-}
-    
-
-void yyerror(char* s)
-{
-  (void) fprintf(stderr, "%s at line %d\n", s, line_counter);
-  error_found = 1;
-}

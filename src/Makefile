@@ -1,11 +1,11 @@
 CC=g++
 CFLAGS=-c -g -Wall -std=c++11
 LDFLAGS=
-SOURCES=Test.cpp Operation.cpp Program.cpp Machine.cpp
+SOURCES=Main.cpp Operation.cpp Program.cpp Machine.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=test
+EXECUTABLE=iloc
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(MAIN) $(SOURCES) $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@

@@ -44,9 +44,10 @@ rbss          {yylval.ival = 1; return REGISTER;}
 
 [a-zA-Z0-9\_]+  {
                 
-		current_opcode = get_opcode(strdup(yytext));
+		        current_opcode = get_opcode(strdup(yytext));
 
                 if (current_opcode){
+                    yylval.opcode = current_opcode
                     return OPCODE;
                 }else{
                     yylval.str = yytext;
