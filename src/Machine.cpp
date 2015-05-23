@@ -102,7 +102,7 @@ State Machine::execute_next(){
 }
 
 void Machine::onereg(Operation op, int value){ 
-    set_register(op.defs[0], value); 
+    set_register(op.regs.back(), value); 
     PC++;
 }
 
@@ -116,57 +116,57 @@ void Machine::execute_operation(){
             PC++;
             break;
         case ADD:
-            result = get_register(op.srcs[0]) + 
-                get_register(op.srcs[1]);
+            result = get_register(op.regs[0]) + 
+                get_register(op.regs[1]);
             onereg(op, result);
             break;
         case SUB:
-            result = get_register(op.srcs[0]) - 
-                get_register(op.srcs[1]);
+            result = get_register(op.regs[0]) - 
+                get_register(op.regs[1]);
             onereg(op, result);
             break;
         case MULT:
-            result = get_register(op.srcs[0]) * 
-                get_register(op.srcs[1]);
+            result = get_register(op.regs[0]) * 
+                get_register(op.regs[1]);
             onereg(op, result);
             break;
         case DIV:
-            result = get_register(op.srcs[0]) / 
-                get_register(op.srcs[1]);
+            result = get_register(op.regs[0]) / 
+                get_register(op.regs[1]);
             onereg(op, result);
             break;	  
         case ADDI:
-            result = get_register(op.srcs[0]) + op.consts[0];
+            result = get_register(op.regs[0]) + op.consts[0];
             onereg(op, result);
             break;
         case SUBI:
-            result = get_register(op.srcs[0]) - op.consts[0];
+            result = get_register(op.regs[0]) - op.consts[0];
             onereg(op, result);
             break;
         case MULTI:
-            result = get_register(op.srcs[0]) * op.consts[0];
+            result = get_register(op.regs[0]) * op.consts[0];
             onereg(op, result);
             break;
         case DIVI:
-            result = get_register(op.srcs[0]) / op.consts[0];
+            result = get_register(op.regs[0]) / op.consts[0];
             onereg(op, result);
             break;
         case LSHIFT:
-            result = get_register(op.srcs[0]) << 
-                get_register(op.srcs[1]);
+            result = get_register(op.regs[0]) << 
+                get_register(op.regs[1]);
             onereg(op, result);
             break;
         case LSHIFTI:
-            result = get_register(op.srcs[0]) << op.consts[0];
+            result = get_register(op.regs[0]) << op.consts[0];
             onereg(op, result);
             break;
         case RSHIFT:
-            result = get_register(op.srcs[0]) >> 
-                get_register(op.srcs[1]);
+            result = get_register(op.regs[0]) >> 
+                get_register(op.regs[1]);
             onereg(op, result);
             break;
         case RSHIFTI:
-            result = get_register(op.srcs[0]) >> op.consts[0];
+            result = get_register(op.regs[0]) >> op.consts[0];
             onereg(op, result);
             break;
         case LOADI:
@@ -174,73 +174,73 @@ void Machine::execute_operation(){
             onereg(op, result);
             break;
         case LOAD:
-            result = get_word(get_register(op.srcs[0]));
+            result = get_word(get_register(op.regs[0]));
             onereg(op, result);
             break;
         case LOADAI:
-            result = get_word(get_register(op.srcs[0]) +
+            result = get_word(get_register(op.regs[0]) +
                     op.consts[0]);
             onereg(op, result);
             break;
         case LOADAO:
-            result = get_word(get_register(op.srcs[0]) +
-                    get_register(op.srcs[1]));
+            result = get_word(get_register(op.regs[0]) +
+                    get_register(op.regs[1]));
             onereg(op, result);
             break;
         case CLOAD:
-            result = get_memory(get_register(op.srcs[0]));
+            result = get_memory(get_register(op.regs[0]));
             onereg(op, result);
             break;
         case CLOADAI:
-            result = get_memory(get_register(op.srcs[0]) +
+            result = get_memory(get_register(op.regs[0]) +
                     op.consts[0]);
             onereg(op, result);
             break;
         case CLOADAO:
-            result = get_memory(get_register(op.srcs[0]) +
-                    get_register(op.srcs[1]));
+            result = get_memory(get_register(op.regs[0]) +
+                    get_register(op.regs[1]));
             onereg(op, result);
             break;
         case STORE:
             for(i=0;i<4;i++) {
-                result = (get_register(op.srcs[0]) << (8*i)) >> 24;
-                location = get_register(op.defs[0]) + i;
+                result = (get_register(op.regs[0]) << (8*i)) >> 24;
+                location = get_register(op.regs[1]) + i;
                 set_memory(location, result);
             }
             PC++;
             break;
         case STOREAI:
             for(i=0;i<4;i++) {
-                result = (get_register(op.srcs[0]) << (8*i)) >> 24;
-                location = get_register(op.defs[0]) + op.consts[0] + i;
+                result = (get_register(op.regs[0]) << (8*i)) >> 24;
+                location = get_register(op.regs[1]) + op.consts[0] + i;
                 set_memory(location, result);
             }
             PC++;
             break;
         case STOREAO:
             for(i=0;i<4;i++) {
-                result = (get_register(op.srcs[0]) << (8*i)) >> 24;
-                location = get_register(op.defs[0]) + get_register(op.defs[1]) + i;
+                result = (get_register(op.regs[0]) << (8*i)) >> 24;
+                location = get_register(op.regs[1]) + get_register(op.regs[2]) + i;
                 set_memory(location, result);
             }
             PC++;
             break; 
         case CSTORE:
-            result = (get_register(op.srcs[0]) << 24) >> 24;
-            location = get_register(op.defs[0]);
+            result = (get_register(op.regs[0]) << 24) >> 24;
+            location = get_register(op.regs[1]);
             set_memory(location, result);
             PC++;
             break;
         case CSTOREAI:
-            result = (get_register(op.srcs[0]) << 24) >> 24;
-            location = get_register(op.defs[0]) + op.consts[0];
+            result = (get_register(op.regs[0]) << 24) >> 24;
+            location = get_register(op.regs[1]) + op.consts[0];
             set_memory(location, result);
             PC++;
             break;
         case CSTOREAO:
-            result = (get_register(op.srcs[0]) << 24) >> 24;
-            location = get_register(op.defs[0]) + 
-                get_register(op.defs[1]);
+            result = (get_register(op.regs[0]) << 24) >> 24;
+            location = get_register(op.regs[1]) + 
+                get_register(op.regs[2]);
             set_memory(location, result);
             PC++;
             break;
@@ -249,114 +249,114 @@ void Machine::execute_operation(){
             
             break;
         case CBR:
-            if (get_register(op.srcs[0]))
+            if (get_register(op.regs[0]))
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case CBR_LT:
-            if (get_register(op.srcs[0])<0)
+            if (get_register(op.regs[0])<0)
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case CBR_LE:
-            if (get_register(op.srcs[0])<=0)
+            if (get_register(op.regs[0])<=0)
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case CBR_EQ:
-            if (get_register(op.srcs[0])==0)
+            if (get_register(op.regs[0])==0)
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case CBR_GE:
-            if (get_register(op.srcs[0])>=0)
+            if (get_register(op.regs[0])>=0)
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case CBR_GT:
-            if (get_register(op.srcs[0])>0)
+            if (get_register(op.regs[0])>0)
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case CBR_NE:
-            if (get_register(op.srcs[0])!=0)
+            if (get_register(op.regs[0])!=0)
                 PC = (program.get_label(op.labels[0]));
             else
                 PC = (program.get_label(op.labels[1]));
             break;
         case COMP:
-            if (get_register(op.srcs[0]) > 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) > 
+                    get_register(op.regs[1]))
                 result = 1;
-            else if (get_register(op.srcs[0]) == 
-                    get_register(op.srcs[1]))
+            else if (get_register(op.regs[0]) == 
+                    get_register(op.regs[1]))
                 result = 0;
             else
                 result = -1;
             onereg(op,result);
             break;
         case CMPLT:
-            if (get_register(op.srcs[0]) < 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) < 
+                    get_register(op.regs[1]))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPLE:
-            if (get_register(op.srcs[0]) <= 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) <= 
+                    get_register(op.regs[1]))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPEQ:
-            if (get_register(op.srcs[0]) == 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) == 
+                    get_register(op.regs[1]))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPNE:
-            if (get_register(op.srcs[0]) != 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) != 
+                    get_register(op.regs[1]))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPGE:
-            if (get_register(op.srcs[0]) >= 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) >= 
+                    get_register(op.regs[1]))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPGT:
-            if (get_register(op.srcs[0]) > 
-                    get_register(op.srcs[1]))
+            if (get_register(op.regs[0]) > 
+                    get_register(op.regs[1]))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case I2I:
-            result = get_register(op.srcs[0]);
+            result = get_register(op.regs[0]);
             onereg(op,result);
             break;
         case C2C:
         case C2I:
         case I2C:
-            result = (get_register(op.srcs[0]) << 24) >> 24;
+            result = (get_register(op.regs[0]) << 24) >> 24;
             onereg(op,result);
             break;
         case OUTPUT:

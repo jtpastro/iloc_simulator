@@ -2,21 +2,16 @@ WHITESPACE [ \t]
 NUM [0-9]+
 
 %{
-  /* iloc.l
-   * Lex specification for the ILOC subset defined in
-   * "Engineering a Compiler" by Cooper and Torczon
-   * written by Todd Waterman
-   * 11/30/00 */
-
   #include <stdlib.h>
   #include <stdio.h>
   #include <string.h>
 
-  #include "operation.h"
-  #include "parser.h"
-
+  #include "Operation.hpp"
+  #include "parser.hh"
+  
+  extern "C" int yylex();
+  
   int line_counter = 1;
-  Opcode* current_opcode;
 
 %}
 
@@ -40,21 +35,18 @@ rbss          {yylval.ival = 1; return REGISTER;}
                     char *lbl = yytext;
                     lbl[strlen(lbl)-1]='\0';
                     yylval.str = lbl;
-                    return TARGET;}
-
-[a-zA-Z0-9\_]+  {
-                
-		        current_opcode = get_opcode(strdup(yytext));
-
-                if (current_opcode){
-                    yylval.opcode = current_opcode
-                    return OPCODE;
-                }else{
-                    yylval.str = yytext;
-                    return LABEL;
+                    return TARGET;
                 }
-              }
-
+[a-zA-Z0-9\_]+  {
+                    Opcode_Name current_opcode = Operation::str_to_opcode(strdup(yytext));
+                    if(current_opcode != INVALID_OP){
+                        yylval.opcode = current_opcode;
+                        return OPCODE;
+                    } else {
+                        yylval.str = yytext;
+                        return LABEL;
+                    }
+                }
 \/\/[^\n]*  { /* Comment */}
 
 [\n]          {line_counter++;}
@@ -63,7 +55,7 @@ rbss          {yylval.ival = 1; return REGISTER;}
 
 %%
 
-yywrap()
+int yywrap()
 {
   return 1;
 }

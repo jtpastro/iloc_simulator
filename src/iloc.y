@@ -1,23 +1,33 @@
 %{
-  #include <stdio.h>
-  #include <string.h>
-  #include <stdlib.h>
-  #include "Machine.hpp"
+    #include <stdio.h>
+    #include <string.h>
+    #include <stdlib.h>
+    #include "Machine.hpp"
 
-  #define MAX_ERROR_MESSAGE_LENGTH 100
+    #define MAX_ERROR_MESSAGE_LENGTH 100
 
-  extern char yytext[];
+    extern char yytext[];
+    extern int line_counter;
 
-  extern int line_counter;
+    Program program;
 
+    extern "C" {
+        extern FILE *yyin;
+        extern int yylineno;
+        int yylex(void);
+        void yyerror (char const *mensagem);
+        int yyparse ();
+    }
+   void yyerror(const char* msg) {
+      fprintf(stderr, "%s\n", msg);
+   }
 %}
 
 %union {
     int ival;
-    Program *program;
     Operation *operation;
-    Opcode opcode;
-    std::string str;
+    Opcode_Name opcode;
+    char *str;
 }
 
 %token OPEN_BRACKET
@@ -31,8 +41,8 @@
 %token NUMBER
 %token <str> LABEL
 %token <str> TARGET
+%token <opcode> OPCODE
 
-%type <program> operation_list
 %type <operation> operation
 %type <operation> operand_list
 %type <opcode> the_opcode
@@ -45,130 +55,86 @@
 
 %% /* Beginning of rules */
 
-iloc_program     : operation_list
-                 {
-		     first_operation = $1;
-		 }
-                 ;
+iloc_program    : operation_list {
+                };
 
-operation_list : operation {
-                    $$ = new Program();
-                    $$->add_operation($1);
+operation_list  : operation {
+                    program.add_operation(*$1);
                 }
                 | label_def operation {
-                    $$ = new Program();
-		            $$->add_operation($1, $2);
+                    program.add_operation($1,*$2);
                 }
-                | operation operation_list
-                {
-                    $$ = $1;
-                    $$->add_operation($$);
+                | operation_list operation {
+                    program.add_operation(*$2);
                 }
-                | label_def operation operation_list
-                {
-                    $$ = $2;
-                    program.add_operation($1, $$);
+                | operation_list label_def operation {
+                    program.add_operation($2, *$3);
                 };
-operation       : the_opcode operand_list ARROW operand_list
-                {
-                    $2->opcode = $1;
-		            $2->merge($4);
-                    $2->verify_operation();
-                    $$=$2;
-		            free($4);
-		 }
-                 | the_opcode operand_list {
-                    $2->opcode = $1;
-                    $2->verify_operation();
-                    $$=$2;
-		         }
-                 | the_opcode ARROW operand_list { 
-                    $3->opcode = $1;
-                    $3->verify_operation();
-                    $$=$3;
-		         }
-                 | the_opcode {
-                    $$ = new Operation();
+
+operation       : the_opcode operand_list ARROW operand_list {
+                    $$ = $2;
+                    $$->concatenate(*$4);
                     $$->opcode = $1;
+                    delete $4;
+                }
+                | the_opcode operand_list {
+                    $$ = $2;
+                    $$->opcode = $1;
+                }
+                | the_opcode ARROW operand_list { 
+                    $$ = $3;
+                    $$->opcode = $1;
+                }
+                | the_opcode {
+                    $$->opcode = $1;
+		        };
+
+the_opcode       : OPCODE {
+		            $$ = $1;
+		         };
+
+operand_list     : reg {
+                    $$ = new Operation();
+		            $$->regs.push_back($1);
 		         }
-                 ;
-
-the_opcode       : OPCODE
-                 {
-		            $$ = current_opcode;
+                 | operand_list COMMA reg {
+                    $$ = $1;
+                    $$->regs.push_back($3);
 		         }
-                 ;
-
-operand_list     : reg
-                 {
-		     $$ = new_operands();
-		     $$->num_regs = 1;
-		     $$->regs = $1;
-		 }
-                 | reg COMMA operand_list
-                 {
-		     $$ = $3;
-		     $$->num_regs += 1;
-		     $1->next = $$->regs;
-		     $$->regs = $1;
-		 }
-                 | const
-                 {
-		     $$ = new_operands();
-		     $$->num_consts = 1;
-		     $$->consts = $1;
-		 }
-                 | const COMMA operand_list
-                 {
-		     $$ = $3;
-		     $$->num_consts += 1;
-		     $1->next = $$->consts;
-		     $$->consts = $1;
-		 }
-                 | lbl
-                 {
-		            $$ = $1
+                 | const {
+                    $$ = new Operation();
+                    $$->consts.push_back($1);
 		         }
-                 | lbl COMMA operand_list
-                 {
-		            $$ = $3;
-		            $$->num_labels += 1;
-		     $1->next = $$->labels;
-		     $$->labels = $1;
-		 }
-                 ;
+                 | operand_list COMMA const {
+		            $$ = $1;
+                    $$->consts.push_back($3);
+		         }
+                 | lbl {
+		            $$ = new Operation();
+                    $$->labels.push_back($1);
+		         }
+                 | operand_list COMMA lbl {
+		            $$ = $1;
+                    $$->labels.push_back($3);
+		         };
 
-reg              : REGISTER
-                 {
-		     $$ = malloc(sizeof(Operand));
-		     //$$->value = (int) strtol(yylval.ival, (char**) NULL, 10);
-		     $$->value = yylval.ival;
-		     
-		     $$->next = NULL;
-		 }
-                 ;
+reg              : REGISTER {
+                    $$ = yylval.ival;
+		         };
 
-const            : NUMBER
-                 {
+const            : NUMBER {
 		            $$ = yylval.ival;
-		 }
-		 ;
+		         };
 
-lbl              : LABEL
-                 {
-                     char *myLabel = $1;
-		     $$ = malloc(sizeof(Operand));
-		     $$->value = insert_label(myLabel);
-		     $$->next = NULL;
-		 }
-                 ;
+lbl              : LABEL {
+                    char *myLabel = $1; 
+		            $$ = strdup(myLabel);
+                 };
 
-label_def        : TARGET
-                 {
-             char *myLabel = $1; 
-		     $$ = insert_label(strdup(myLabel));
-		 }
-                 ;
+label_def        : TARGET {
+                    char *myLabel = $1; 
+		            $$ = strdup(myLabel);
+		         };
 
 %%
-    
+

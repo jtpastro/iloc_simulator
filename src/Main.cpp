@@ -1,11 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <argp.h>
 #include "Machine.hpp"
 #include "Main.hpp"
 
-static struct argp_option options[] = {
+/*static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
     {"output",		'o', "OUT_FORMAT", 0, "Output format"},
     {"reg",		'r', "NUM_REG", 0, "Number of registers of the machine"},
@@ -38,7 +37,7 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
         case 'f': arguments->frame_size = atoi(arg); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
-                      /* Not enough arguments. */
+                      // Not enough arguments.
                       argp_usage (state);
                   }
                   break;
@@ -54,13 +53,13 @@ const char *argp_program_version =
 const char *argp_program_bug_address =
 "<jtpastro@inf.ufrgs.br>";
 
-/* Program documentation. */
+// Program documentation.
 static char doc[] =
 "ILOCsim -- a pretty simple iloc simulator";
 
 //static char args_doc[] = "ARG1";
 
-static struct argp argp = { options, parse_options, 0/*args_doc*/, doc };
+static struct argp argp = { options, parse_options, 0, doc };
 
 void read_ints (const char* file_name)
 {
@@ -75,7 +74,7 @@ void read_ints (const char* file_name)
     }
   fclose (file);        
 }
-
+*/
 Program parse(){
     Program prog;
     Operation op, op2, op3, op4, op5, op6, op7, op8, op9;
@@ -83,37 +82,37 @@ Program parse(){
     op9.consts.push_back(1024);
     prog.add_operation("L3", op9);
     op8.opcode = STORE;
-    op8.srcs.push_back(5);
-    op8.defs.push_back(6);
+    op8.regs.push_back(5);
+    op8.regs.push_back(6);
     prog.add_operation(op8);
     op7.opcode = LOADI;
     op7.consts.push_back(3);
-    op7.defs.push_back(5);
+    op7.regs.push_back(5);
     prog.add_operation("L1", op7);
     op6.opcode = JUMPI;
     op6.labels.push_back("L3");
     prog.add_operation(op6);
     op5.opcode = STORE;
-    op5.srcs.push_back(5);
-    op5.defs.push_back(6);
+    op5.regs.push_back(5);
+    op5.regs.push_back(6);
     prog.add_operation(op5);
     op4.opcode = LOADI;
     op4.consts.push_back(1024);
-    op4.defs.push_back(6);
+    op4.regs.push_back(6);
     prog.add_operation(op4);
     op3.opcode = ADD;
-    op3.srcs.push_back(3);
-    op3.srcs.push_back(3);
-    op3.defs.push_back(5);
+    op3.regs.push_back(3);
+    op3.regs.push_back(3);
+    op3.regs.push_back(5);
     prog.add_operation(op3);
     op2.opcode = MULT;
-    op2.srcs.push_back(3);
-    op2.srcs.push_back(3);
-    op2.defs.push_back(5);
+    op2.regs.push_back(3);
+    op2.regs.push_back(3);
+    op2.regs.push_back(5);
     prog.add_operation(op2);
     op.opcode = LOADI;
     op.consts.push_back(3);
-    op.defs.push_back(3);
+    op.regs.push_back(3);
     prog.add_operation("L2", op);
     return prog;
 }
@@ -123,7 +122,7 @@ int main(int argc, char** argv) {
     int reg_size = 0;
     int machine_initialized = 0;
     Program code;
-
+/*
     struct arguments arguments;
     
     arguments.frame_size=0;
@@ -144,8 +143,8 @@ int main(int argc, char** argv) {
 
     if (!machine_initialized)
         initialize_machine(reg_size,mem_size);
-
-    code = parse();
+*/
+    //code = parse();
 
     Machine mach(reg_size, mem_size, code);
     mach.run();

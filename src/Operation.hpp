@@ -16,9 +16,8 @@ typedef enum opcode_name {NOP=0, ADD, SUB, MULT, DIV, ADDI, SUBI, MULTI,
 typedef struct opcode {
     Opcode_Name name;
     std::string str;
-    int srcs, consts, labels, defs;
+    int regs, consts, labels;
     int latency;
-    int target_is_source;
 } Opcode;
 
 class Operation{
@@ -28,17 +27,16 @@ class Operation{
         static bool is_opcode(std::string);
         static Opcode_Name str_to_opcode(std::string);
         std::string get_string();
-        unsigned int num_srcs();
+        unsigned int num_regs();
         unsigned int num_lbls();        
-        unsigned int num_defs();
         unsigned int num_consts();        
         unsigned int get_latency();        
         unsigned int is_source();        
         void set_latency(unsigned int);
+        void concatenate(Operation);
         bool verify_operation();
         Opcode_Name opcode;
         std::vector<int> consts;
-        std::vector<int> srcs;
-        std::vector<int> defs;
+        std::vector<int> regs;
         std::vector<std::string> labels;
 };
