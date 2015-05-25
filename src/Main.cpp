@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "Machine.hpp"
-#include "Main.hpp"
 
 /*static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},

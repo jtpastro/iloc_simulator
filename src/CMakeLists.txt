@@ -17,4 +17,5 @@ add_executable(iloc
     ${BISON_MyParser_OUTPUTS}
     ${FLEX_MyScanner_OUTPUTS}
 )
-
+set_property(TARGET iloc PROPERTY CXX_STANDARD 11)
+set_property(TARGET iloc PROPERTY CXX_STANDARD_REQUIRED ON)
