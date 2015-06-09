@@ -3,11 +3,13 @@
 #include <string.h>
 #include "Machine.hpp"
 #include "parser.hpp"
+#include <argp.h>
 
 int yyparse();
 extern FILE *yyin;
 extern Program program;
-/*static struct argp_option options[] = {
+
+static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
     {"output",		'o', "OUT_FORMAT", 0, "Output format"},
     {"reg",		'r', "NUM_REG", 0, "Number of registers of the machine"},
@@ -63,7 +65,7 @@ static char doc[] =
 //static char args_doc[] = "ARG1";
 
 static struct argp argp = { options, parse_options, 0, doc };
-
+/*
 void read_ints (const char* file_name)
 {
   FILE* file = fopen (file_name, "r");
@@ -78,54 +80,12 @@ void read_ints (const char* file_name)
   fclose (file);        
 }
 */
-Program parse(){
-    Program prog;
-    Operation op, op2, op3, op4, op5, op6, op7, op8, op9;
-    op9.opcode = OUTPUT;
-    op9.consts.push_back(1024);
-    prog.add_operation("L3", op9);
-    op8.opcode = STORE;
-    op8.regs.push_back(5);
-    op8.regs.push_back(6);
-    prog.add_operation(op8);
-    op7.opcode = LOADI;
-    op7.consts.push_back(3);
-    op7.regs.push_back(5);
-    prog.add_operation("L1", op7);
-    op6.opcode = JUMPI;
-    op6.labels.push_back("L3");
-    prog.add_operation(op6);
-    op5.opcode = STORE;
-    op5.regs.push_back(5);
-    op5.regs.push_back(6);
-    prog.add_operation(op5);
-    op4.opcode = LOADI;
-    op4.consts.push_back(1024);
-    op4.regs.push_back(6);
-    prog.add_operation(op4);
-    op3.opcode = ADD;
-    op3.regs.push_back(3);
-    op3.regs.push_back(3);
-    op3.regs.push_back(5);
-    prog.add_operation(op3);
-    op2.opcode = MULT;
-    op2.regs.push_back(3);
-    op2.regs.push_back(3);
-    op2.regs.push_back(5);
-    prog.add_operation(op2);
-    op.opcode = LOADI;
-    op.consts.push_back(3);
-    op.regs.push_back(3);
-    prog.add_operation("L2", op);
-    return prog;
-}
 
 int main(int argc, char** argv) {
     int mem_size = 0;
     int reg_size = 0;
     int machine_initialized = 0;
 
-/*
     struct arguments arguments;
     
     arguments.frame_size=0;
@@ -133,7 +93,7 @@ int main(int argc, char** argv) {
     arguments.num_reg=0;
     arguments.mem_size=0;
     arguments.output_format=0;
-    arguments.costs_file="";
+    //arguments.costs_file="";
 
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
         fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
@@ -141,12 +101,9 @@ int main(int argc, char** argv) {
     reg_size= arguments.num_reg;
     mem_size= arguments.mem_size;
 
-    if(arguments.costs_file[0]!='\0')
-        read_ints(arguments.costs_file);
+    //if(arguments.costs_file[0]!='\0')
+      //  read_ints(arguments.costs_file);    
 
-    if (!machine_initialized)
-        initialize_machine(reg_size,mem_size);
-*/
     yyparse();
 
     Machine mach(reg_size, mem_size, program);
