@@ -14,7 +14,7 @@ Machine::Machine(uint reg_size, uint mem_size, Program prog)
         MEMORY_SIZE = mem_size;
     register_bank.resize(NUM_REGISTERS);
     memory_bank.resize(MEMORY_SIZE);
-}\
+}
 
 Machine::Machine(State state, Program prog)
 {

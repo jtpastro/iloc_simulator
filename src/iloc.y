@@ -16,7 +16,6 @@
         extern int yylineno;
         int yylex(void);
         void yyerror (char const *mensagem);
-        int yyparse ();
     }
    void yyerror(const char* msg) {
       fprintf(stderr, "%s\n", msg);
@@ -35,7 +34,6 @@
 %token SEMICOLON
 %token COMMA
 %token ARROW
-%token OPCODE
 %token DOUTPUT
 %token REGISTER
 %token NUMBER

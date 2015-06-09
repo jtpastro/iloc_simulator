@@ -30,11 +30,11 @@ int Program::get_missing_refs(){
 }
 
 Operation Program::get_operation(int pc){
-    return op_list.at(op_list.size() - 1 - pc);
+    return op_list.at(pc);
 }
 
 int Program::get_label(std::string lbl){
-    return op_list.size() - 1 - symbol_table.at(lbl);
+    return symbol_table.at(lbl);
 }
 
 bool Program::check_labels(){
@@ -42,4 +42,8 @@ bool Program::check_labels(){
         if(it.second == -1)
             return false;
     return true;
+}
+
+int Program::get_size(){
+    return op_list.size();
 }

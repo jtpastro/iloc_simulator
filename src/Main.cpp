@@ -6,6 +6,7 @@
 
 int yyparse();
 extern FILE *yyin;
+extern Program program;
 /*static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
     {"output",		'o', "OUT_FORMAT", 0, "Output format"},
@@ -123,7 +124,7 @@ int main(int argc, char** argv) {
     int mem_size = 0;
     int reg_size = 0;
     int machine_initialized = 0;
-    Program code;
+
 /*
     struct arguments arguments;
     
@@ -148,7 +149,7 @@ int main(int argc, char** argv) {
 */
     yyparse();
 
-    Machine mach(reg_size, mem_size, code);
+    Machine mach(reg_size, mem_size, program);
     mach.run();
 
     return 0;

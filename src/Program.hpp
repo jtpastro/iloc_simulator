@@ -14,4 +14,5 @@ class Program{
         void add_operation(std::string, Operation);
         int get_label(std::string);
         bool check_labels();
+	int get_size();
 };
