@@ -1,8 +1,8 @@
 find_package(BISON)
 find_package(FLEX)
 
-BISON_TARGET(MyParser iloc.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
-FLEX_TARGET(MyScanner iloc.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cc)
+BISON_TARGET(MyParser iloc.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
+FLEX_TARGET(MyScanner iloc.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
 ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 
 

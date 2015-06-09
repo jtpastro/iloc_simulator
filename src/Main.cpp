@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "Machine.hpp"
+#include "parser.hpp"
 
+int yyparse();
+extern FILE *yyin;
 /*static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
     {"output",		'o', "OUT_FORMAT", 0, "Output format"},
@@ -143,7 +146,7 @@ int main(int argc, char** argv) {
     if (!machine_initialized)
         initialize_machine(reg_size,mem_size);
 */
-    //code = parse();
+    yyparse();
 
     Machine mach(reg_size, mem_size, code);
     mach.run();

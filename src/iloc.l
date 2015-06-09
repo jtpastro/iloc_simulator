@@ -7,7 +7,7 @@ NUM [0-9]+
   #include <string.h>
 
   #include "Operation.hpp"
-  #include "parser.hh"
+  #include "parser.hpp"
   
   extern "C" int yylex();
   
