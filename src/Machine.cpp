@@ -4,116 +4,113 @@
 #include <exception>
 #include "Machine.hpp"
 
-Machine::Machine(uint reg_size, uint mem_size, Program prog)
+Machine::Machine(Program prog)
 {
     program = prog;
-    PC = 0;
-    if (reg_size > 0)
-        NUM_REGISTERS = reg_size;
-    if (mem_size > 0)
-        MEMORY_SIZE = mem_size;
-    register_bank.resize(NUM_REGISTERS);
-    memory_bank.resize(MEMORY_SIZE);
+    state.PC=0;
+    quiet=false;
 }
 
-Machine::Machine(State state, Program prog)
+int Machine::get_register(std::string reg)
 {
-    Program program = prog;
-    PC = state.PC;
-    register_bank = state.register_bank;
-    memory_bank = state.memory_bank;
-    NUM_REGISTERS = register_bank.size();
-    MEMORY_SIZE = memory_bank.size();
-}
-
-int Machine::get_register(uint reg)
-{
-    if (reg < NUM_REGISTERS)
-        return register_bank[reg].data;
-    fprintf(stderr,"Simulator Error: Invalid register number r%d used.\n", reg);
-    exit(EXIT_FAILURE);
-}
-
-void Machine::set_register(uint reg, int value)
-{
-    if (reg < NUM_REGISTERS){
-        register_bank[reg].data = value;
-        register_bank[reg].accessed = true;
-    } else {
-        fprintf(stderr,"Simulator Error: Invalid register number r%d used.\n", reg);
-        exit(EXIT_FAILURE);
+    std::map<std::string,int>::iterator it = state.registers.find(reg);
+    if(it!=state.registers.end())
+        return it->second;
+    else {
+        if(!quiet)
+            fprintf(stderr,"WARNING: register %s not initialized.\n", reg);
+        state.registers[reg] = 0;
+        return 0;
     }
+}
+
+void Machine::set_register(std::string reg, int value)
+{
+    state.registers[reg] = value;
 }
 
 char Machine::get_memory(uint location)
 {
-    if (location < MEMORY_SIZE)
-        return memory_bank[location].data; 
-    fprintf(stderr,"Simulator Error: Invalid memory address %d accessed.\n", location);
-    exit(EXIT_FAILURE);
+    std::map<uint,char>::iterator it = state.memory.find(location);
+    if(it!=state.memory.end())
+        return it->second;
+    else {
+        if(!quiet)
+            fprintf(stderr,"WARNING: memory address %d was not initialized.\n", location);
+        state.memory[location] = 0;
+        return 0;
+    }
 }
 
 int Machine::get_word(uint location)
 {
     int value = ((int)(unsigned char)get_memory(location) << 24 | 
-		 (int)(unsigned char)get_memory(location+1) << 16 |
-		 (int)(unsigned char)get_memory(location+2) << 8 | 
-		 (int)(unsigned char)get_memory(location+3));
+		         (int)(unsigned char)get_memory(location+1) << 16 |
+		         (int)(unsigned char)get_memory(location+2) << 8 | 
+        		 (int)(unsigned char)get_memory(location+3));
     return(value);
 }
 
-void Machine::set_memory(uint location,char value)
-{
-    if (location < MEMORY_SIZE){
-        memory_bank[location].data = value;
-        memory_bank[location].accessed = true;
-    } else {
-        fprintf(stderr,"Simulator Error: Invalid memory address %d accessed.\n", location);
+uint Machine::get_branch_destination(std::string lbl){
+    try {
+        return program.get_label(lbl);
+    }
+    catch (const std::out_of_range& oor) {
+        fprintf(stderr,"Semantic Error: Label undeclared: %s.\n", lbl);
         exit(EXIT_FAILURE);
     }
 }
 
+void Machine::set_memory(uint location,char value)
+{
+    state.memory[location] = value;
+}
+
+State Machine::get_state(){
+    return state;
+}
+
+void Machine::set_state(State stat){
+    state = stat;
+}
+
 void Machine::reg_state(){	
-    int i;
-    for(i=0;i<NUM_REGISTERS;i++){
-        printf("Accessed: %d, Content: %d\n", register_bank[i].accessed, register_bank[i].data);
-    }
+    printf("|%-12s%s|\n","Register","Content");
+    for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
+        printf("|%-12s%d|", it->first, it->second);
 }
 
 void Machine::mem_state(){	
-    int i;
-    for(i=0;i<MEMORY_SIZE;i++){
-        printf("Accessed: %d, Content: %d\n", memory_bank[i].accessed, memory_bank[i].data);
-    }
+    printf("|%-12s%s|\n","Address","Content");
+    for (std::map<uint,char>::iterator it=state.memory.begin(); it!=state.memory.end(); ++it)
+        printf("|%010d: %d|", it->first, it->second);
+}
+
+void Machine::prog_state(){	
+    printf("Program code:\n");
+    for(int i=0; i<program.get_size(); i++)
+        printf("%s\n", program.get_line(i));
 }
 
 void Machine::run(){
     try {
         while(true){ execute_operation(); }
-    } catch(std::exception& e) {}
-}
-
-State Machine::execute_next(){
-    execute_operation();
-    State state;
-    //state.PC = PC;
-    //state.register_bank = register_bank;
-    return state;
+    } catch (const std::out_of_range& oor) {}
 }
 
 void Machine::onereg(Operation op, int value){ 
     set_register(op.regs.back(), value); 
-    PC++;
+    state.PC++;
 }
 
 void Machine::execute_operation(){
-    Operation op = program.get_operation(PC); 
+    Operation op = program.get_operation(state.PC); 
     int i;
     int result;
     uint location;
     switch(op.opcode) {
         case NOP:
-            PC++;
+            state.PC++;
             break;
         case ADD:
             result = get_register(op.regs[0]) + 
@@ -134,6 +131,33 @@ void Machine::execute_operation(){
             result = get_register(op.regs[0]) / 
                 get_register(op.regs[1]);
             onereg(op, result);
+            break;	
+        case AND:
+            result = get_register(op.regs[0]) & 
+                get_register(op.regs[1]);
+            onereg(op, result);
+            break;
+        case OR:
+            result = get_register(op.regs[0]) | 
+                get_register(op.regs[1]);
+            onereg(op, result);
+            break;
+        case XOR:
+            result = get_register(op.regs[0]) ^ 
+                get_register(op.regs[1]);
+            onereg(op, result);
+            break;  
+        case ANDI:
+            result = get_register(op.regs[0]) & op.consts[0];
+            onereg(op, result);
+            break;
+        case ORI:
+            result = get_register(op.regs[0]) | op.consts[0];
+            onereg(op, result);
+            break;
+        case XORI:
+            result = get_register(op.regs[0]) ^ op.consts[0];
+            onereg(op, result);
             break;	  
         case ADDI:
             result = get_register(op.regs[0]) + op.consts[0];
@@ -143,12 +167,20 @@ void Machine::execute_operation(){
             result = get_register(op.regs[0]) - op.consts[0];
             onereg(op, result);
             break;
+        case RSUBI:
+            result = op.consts[0] - get_register(op.regs[0]);
+            onereg(op, result);
+            break;
         case MULTI:
             result = get_register(op.regs[0]) * op.consts[0];
             onereg(op, result);
             break;
         case DIVI:
             result = get_register(op.regs[0]) / op.consts[0];
+            onereg(op, result);
+            break;
+        case RDIVI:
+            result = op.consts[0] / get_register(op.regs[0]);
             onereg(op, result);
             break;
         case LSHIFT:
@@ -207,7 +239,7 @@ void Machine::execute_operation(){
                 location = get_register(op.regs[1]) + i;
                 set_memory(location, result);
             }
-            PC++;
+            state.PC++;
             break;
         case STOREAI:
             for(i=0;i<4;i++) {
@@ -215,7 +247,7 @@ void Machine::execute_operation(){
                 location = get_register(op.regs[1]) + op.consts[0] + i;
                 set_memory(location, result);
             }
-            PC++;
+            state.PC++;
             break;
         case STOREAO:
             for(i=0;i<4;i++) {
@@ -223,83 +255,38 @@ void Machine::execute_operation(){
                 location = get_register(op.regs[1]) + get_register(op.regs[2]) + i;
                 set_memory(location, result);
             }
-            PC++;
+            state.PC++;
             break; 
         case CSTORE:
             result = (get_register(op.regs[0]) << 24) >> 24;
             location = get_register(op.regs[1]);
             set_memory(location, result);
-            PC++;
+            state.PC++;
             break;
         case CSTOREAI:
             result = (get_register(op.regs[0]) << 24) >> 24;
             location = get_register(op.regs[1]) + op.consts[0];
             set_memory(location, result);
-            PC++;
+            state.PC++;
             break;
         case CSTOREAO:
             result = (get_register(op.regs[0]) << 24) >> 24;
             location = get_register(op.regs[1]) + 
                 get_register(op.regs[2]);
             set_memory(location, result);
-            PC++;
+            state.PC++;
             break;
         case JUMPI:
-            PC = (program.get_label(op.labels[0]));
-            
+            state.PC = (get_branch_destination(op.labels[0]));
+            break;
+        case JUMP:
+            state.PC = get_register(op.regs[0]);
             break;
         case CBR:
             if (get_register(op.regs[0]))
-                PC = (program.get_label(op.labels[0]));
+                state.PC = (get_branch_destination(op.labels[0]));
             else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case CBR_LT:
-            if (get_register(op.regs[0])<0)
-                PC = (program.get_label(op.labels[0]));
-            else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case CBR_LE:
-            if (get_register(op.regs[0])<=0)
-                PC = (program.get_label(op.labels[0]));
-            else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case CBR_EQ:
-            if (get_register(op.regs[0])==0)
-                PC = (program.get_label(op.labels[0]));
-            else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case CBR_GE:
-            if (get_register(op.regs[0])>=0)
-                PC = (program.get_label(op.labels[0]));
-            else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case CBR_GT:
-            if (get_register(op.regs[0])>0)
-                PC = (program.get_label(op.labels[0]));
-            else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case CBR_NE:
-            if (get_register(op.regs[0])!=0)
-                PC = (program.get_label(op.labels[0]));
-            else
-                PC = (program.get_label(op.labels[1]));
-            break;
-        case COMP:
-            if (get_register(op.regs[0]) > 
-                    get_register(op.regs[1]))
-                result = 1;
-            else if (get_register(op.regs[0]) == 
-                    get_register(op.regs[1]))
-                result = 0;
-            else
-                result = -1;
-            onereg(op,result);
+                state.PC = (get_branch_destination(op.labels[1]));
             break;
         case CMPLT:
             if (get_register(op.regs[0]) < 
@@ -358,16 +345,6 @@ void Machine::execute_operation(){
         case I2C:
             result = (get_register(op.regs[0]) << 24) >> 24;
             onereg(op,result);
-            break;
-        case OUTPUT:
-            if (!quiet)
-                printf("%d\n", get_word(op.consts[0]));
-            PC++;
-            break;
-        case COUTPUT:
-            if (!quiet)
-                printf("%d\n", get_memory(op.consts[0]));
-            PC++;
             break;
         default:
             fprintf(stderr,"Simulator Error: Invalid opcode encountered in execute_operation.");

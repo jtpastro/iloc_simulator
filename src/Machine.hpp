@@ -1,50 +1,31 @@
-#include <vector>
+#include <map>
+#include <string>
 #include "Program.hpp"
-
-#define DEFAULT_MEMORY_SIZE 32768
-#define DEFAULT_NUM_REGISTERS 256
-typedef unsigned int uint;
-typedef unsigned char uchar;
-
-class Reg{
-    public:
-        int data;
-        bool accessed;
-};
-
-class Mem {
-    public:
-        char data;
-        bool accessed;
-};
 
 class State {
     public:
         uint PC;
-        std::vector<Mem> memory_bank;
-        std::vector<Reg> register_bank;
+        std::map<uint,char> memory;
+        std::map<std::string,int> registers;
 };
 
 class Machine {
-        uint PC;
+        bool quiet;
+        State state;
         Program program;
-        std::vector<Mem> memory_bank;
-        std::vector<Reg> register_bank;
-        uint MEMORY_SIZE = DEFAULT_MEMORY_SIZE;
-        uint NUM_REGISTERS = DEFAULT_NUM_REGISTERS;
         int get_word(uint);
         char get_memory(uint);
-        int get_register(uint);
+        int get_register(std::string);
         void set_word(uint,int);
-        void set_register(uint,int);
+        void set_register(std::string,int);
         void set_memory(uint,char);
         void onereg(Operation, int);
-        void execute_operation();
+        uint get_branch_destination(std::string);
     public:
-        bool quiet=false;
-        Machine(uint, uint, Program);
-        Machine(State, Program);
-        State execute_next();
+        Machine(Program);
+        State get_state();
+        void set_state(State);
+        void execute_operation();
         void run();
         void reg_state();
         void mem_state();

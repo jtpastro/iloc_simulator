@@ -3,16 +3,17 @@
 #include <map>
 #include "Operation.hpp"
 
+typedef unsigned int uint;
+
 class Program{
-        std::map<std::string,int> symbol_table;
+        std::map<std::string,uint> symbol_table;
+        std::map<uint,std::string> line_table;
         std::vector<Operation> op_list;
-        int missing_refs;
     public:
-        Operation get_operation(int);
-        int get_missing_refs();
+        Operation get_operation(uint);
         void add_operation(Operation);
         void add_operation(std::string, Operation);
-        int get_label(std::string);
-        bool check_labels();
-	int get_size();
+        uint get_label(std::string);
+        uint get_size();
+        std::string get_line(uint);
 };

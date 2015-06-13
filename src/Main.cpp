@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
     yyparse();
 
-    Machine mach(reg_size, mem_size, program);
+    Machine mach(program);
     mach.run();
 
     return 0;

@@ -3,47 +3,33 @@
 #include "Program.hpp"
 
 void Program::add_operation(Operation op){
-    for(std::string it : op.labels){
-        if(symbol_table.count(it)==0){
-            symbol_table[it] = -1;
-            missing_refs++;
-        }
-    }
     op_list.push_back(op);
 }
  
 void Program::add_operation(std::string lbl, Operation op){
     if(symbol_table.count(lbl)==0){
         symbol_table[lbl] = op_list.size();
-    } else if(symbol_table[lbl] == -1){
-        symbol_table[lbl] = op_list.size();
-        missing_refs--;
+        line_table[op_list.size()] = lbl;
     } else {
-        fprintf(stderr,"Simulator Error: Repeated label declaration");
+        fprintf(stderr,"Semantic Error: Repeated label declaration.\n");
         exit(EXIT_FAILURE);
     }
     add_operation(op);
 }
 
-int Program::get_missing_refs(){
-    return missing_refs; 
-}
-
-Operation Program::get_operation(int pc){
+Operation Program::get_operation(uint pc){
     return op_list.at(pc);
 }
 
-int Program::get_label(std::string lbl){
+uint Program::get_label(std::string lbl){
     return symbol_table.at(lbl);
 }
 
-bool Program::check_labels(){
-    for(auto& it: symbol_table)
-        if(it.second == -1)
-            return false;
-    return true;
+uint Program::get_size(){
+    return op_list.size();
 }
 
-int Program::get_size(){
-    return op_list.size();
+std::string Program::get_line(uint pc){
+  std::map<uint,std::string>::iterator it = line_table.find(pc);
+  return (it != line_table.end() ? it->second + ": " : "") + op_list.at(pc).toString();  
 }

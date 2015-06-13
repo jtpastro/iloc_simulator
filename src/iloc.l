@@ -1,10 +1,8 @@
 WHITESPACE [ \t]
 NUM [0-9]+
+STRING [a-zA-Z0-9\_]+
 
 %{
-  #include <stdlib.h>
-  #include <stdio.h>
-  #include <string.h>
 
   #include "Operation.hpp"
   #include "parser.hpp"
@@ -19,26 +17,22 @@ NUM [0-9]+
 
 %%
 
-\[            {return OPEN_BRACKET;}
-\]            {return CLOSE_BRACKET;}
 \;            {return SEMICOLON;}
 \,            {return COMMA;}
 [\=\-]\>      {return ARROW;}
 
-r{NUM}        {yylval.ival = atoi(&yytext[1])+2; return REGISTER;}
-rarp          {yylval.ival = 0; return REGISTER;}
-rbss          {yylval.ival = 1; return REGISTER;}
+[rR]{STRING}  {yylval.str = yytext; return REGISTER;}
 {NUM}         {yylval.ival = atoi(yytext); return NUMBER;}
 \-{NUM}       {yylval.ival = atoi(yytext); return NUMBER;}
 
-[a-zA-Z0-9\_]+: {   
+{STRING}: {   
                     char *lbl = yytext;
                     lbl[strlen(lbl)-1]='\0';
                     yylval.str = lbl;
                     return TARGET;
-                }
-[a-zA-Z0-9\_]+  {
-                    Opcode_Name current_opcode = Operation::str_to_opcode(strdup(yytext));
+              }
+{STRING}  {
+                    Opcode_Name current_opcode = Operation::string_to_opcode(yytext);                    
                     if(current_opcode != INVALID_OP){
                         yylval.opcode = current_opcode;
                         return OPCODE;
@@ -46,7 +40,7 @@ rbss          {yylval.ival = 1; return REGISTER;}
                         yylval.str = yytext;
                         return LABEL;
                     }
-                }
+              }
 \/\/[^\n]*  { /* Comment */}
 
 [\n]          {line_counter++;}

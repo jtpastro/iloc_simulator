@@ -1,10 +1,11 @@
 %{
-    #include <stdio.h>
-    #include <string.h>
-    #include <stdlib.h>
-    #include "Machine.hpp"
+    #include <string> //string
+    #include <iostream> //cerr
+    #include <string.h> //strdup
+    #include "Program.hpp"
 
     #define MAX_ERROR_MESSAGE_LENGTH 100
+    #define YYERROR_VERBOSE 1
 
     extern char yytext[];
     extern int line_counter;
@@ -15,10 +16,10 @@
         extern FILE *yyin;
         extern int yylineno;
         int yylex(void);
-        void yyerror (char const *mensagem);
+        void yyerror (std::string msg);
     }
-   void yyerror(const char* msg) {
-      fprintf(stderr, "%s\n", msg);
+   void yyerror(std::string msg) {
+      std::cerr << msg << std::endl;
    }
 %}
 
@@ -29,14 +30,11 @@
     char *str;
 }
 
-%token OPEN_BRACKET
-%token CLOSE_BRACKET
 %token SEMICOLON
 %token COMMA
 %token ARROW
-%token DOUTPUT
-%token REGISTER
-%token NUMBER
+%token <str> REGISTER
+%token <ival> NUMBER
 %token <str> LABEL
 %token <str> TARGET
 %token <opcode> OPCODE
@@ -44,7 +42,7 @@
 %type <operation> operation
 %type <operation> operand_list
 %type <opcode> the_opcode
-%type <ival> reg
+%type <str> reg
 %type <ival> const
 %type <str> lbl
 %type <str> label_def
@@ -74,6 +72,7 @@ operation       : the_opcode operand_list ARROW operand_list {
                     $$->concatenate(*$4);
                     $$->opcode = $1;
                     delete $4;
+                    
                 }
                 | the_opcode operand_list {
                     $$ = $2;
@@ -84,6 +83,7 @@ operation       : the_opcode operand_list ARROW operand_list {
                     $$->opcode = $1;
                 }
                 | the_opcode {
+                    $$ = new Operation();
                     $$->opcode = $1;
 		        };
 
@@ -117,8 +117,9 @@ operand_list     : reg {
 		         };
 
 reg              : REGISTER {
-                    $$ = yylval.ival;
-		         };
+                    char *regs = $1; 
+	                $$ = strdup(regs);
+    	         };
 
 const            : NUMBER {
 		            $$ = yylval.ival;
