@@ -1,7 +1,6 @@
 #include <stdlib.h>
-#include <stdio.h>
-#include <sstream>
-#include <iostream>
+#include <map> //std::map(op_specs, op_names)
+#include <iostream> //cerr
 #include "Operation.hpp"
 
        /*               name     regs  consts labels latency 
@@ -208,7 +207,43 @@ std::string Operation::toString(){
         case CBR:
            return op + " " + regs[0] + " -> " + labels[0] + ", " + labels[1];
         default:
-            fprintf(stderr,"Simulation Error: Invalid opcode encountered in execute_operation.");
+            std::cerr << "Simulation Error: Invalid opcode encountered in execute_operation." << std::endl;
             exit(EXIT_FAILURE);
     }
+}
+
+void Operation::add_label(std::string lbl){
+    labels.push_back(lbl);
+}
+
+void Operation::add_register(std::string reg){
+    regs.push_back(reg);
+}
+
+void Operation::add_constant(int cons){
+    consts.push_back(cons);
+}
+
+std::string Operation::get_first_label(){
+    return labels[0];
+}
+
+std::string Operation::get_second_label(){
+        return labels[1];
+}
+
+std::string Operation::get_first_register(){
+        return regs[0];
+}
+
+std::string Operation::get_second_register(){
+    return regs[1];
+}
+
+std::string Operation::get_last_register(){
+    return regs.back();
+}
+
+int Operation::get_constant(){
+    return consts[0];
 }

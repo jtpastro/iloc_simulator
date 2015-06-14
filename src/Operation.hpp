@@ -1,5 +1,4 @@
 #include <string>
-#include <map>
 #include <vector>
 
 /*  */
@@ -22,6 +21,9 @@ class Opcode {
 
 
 class Operation{
+        std::vector<int> consts;
+        std::vector<std::string> regs;
+        std::vector<std::string> labels;
     public:
         static Opcode_Name string_to_opcode(std::string);
         static std::string opcode_to_string(Opcode_Name);
@@ -34,7 +36,13 @@ class Operation{
         bool verify_operation();
         std::string toString();
         Opcode_Name opcode;
-        std::vector<int> consts;
-        std::vector<std::string> regs;
-        std::vector<std::string> labels;
+        void add_label(std::string);
+        void add_register(std::string);
+        void add_constant(int);
+        std::string get_first_label();
+        std::string get_second_label();
+        std::string get_first_register();
+        std::string get_second_register();
+        std::string get_last_register();
+        int get_constant();
 };

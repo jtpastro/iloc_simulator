@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdlib.h> //exit
+#include <iostream>
 #include "Program.hpp"
 
 void Program::add_operation(Operation op){
@@ -11,7 +11,7 @@ void Program::add_operation(std::string lbl, Operation op){
         symbol_table[lbl] = op_list.size();
         line_table[op_list.size()] = lbl;
     } else {
-        fprintf(stderr,"Semantic Error: Repeated label declaration.\n");
+        std::cerr << "Semantic Error: Repeated label declaration." << std::endl;
         exit(EXIT_FAILURE);
     }
     add_operation(op);

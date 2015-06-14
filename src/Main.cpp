@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <stdio.h>
+#include <iostream> //cout
 #include <string.h>
 #include "Machine.hpp"
 #include "parser.hpp"

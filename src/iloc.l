@@ -9,7 +9,7 @@ STRING [a-zA-Z0-9\_]+
   
   extern "C" int yylex();
   
-  int line_counter = 1;
+  int line_counter = 0;
 
 %}
 
@@ -41,7 +41,7 @@ STRING [a-zA-Z0-9\_]+
                         return LABEL;
                     }
               }
-\/\/[^\n]*  { /* Comment */}
+\/\/  { /* Comment */}
 
 [\n]          {line_counter++;}
 

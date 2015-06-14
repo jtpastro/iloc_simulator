@@ -1,5 +1,5 @@
 %{
-    #include <string> //string
+    #include <string> //string, to_string
     #include <iostream> //cerr
     #include <string.h> //strdup
     #include "Program.hpp"
@@ -19,7 +19,8 @@
         void yyerror (std::string msg);
     }
    void yyerror(std::string msg) {
-      std::cerr << msg << std::endl;
+      std::cerr << "At line " << std::to_string(line_counter) << ": " << msg << "." << std::endl;
+      exit(EXIT_FAILURE);
    }
 %}
 
@@ -60,31 +61,38 @@ operation_list  : operation {
                 | label_def operation {
                     program.add_operation($1,*$2);
                 }
-                | operation_list operation {
-                    program.add_operation(*$2);
-                }
-                | operation_list label_def operation {
-                    program.add_operation($2, *$3);
-                };
+                | operation {
+                    program.add_operation(*$1);
+                } operation_list
+                | label_def operation {
+                    program.add_operation($1, *$2);
+                } operation_list;
 
 operation       : the_opcode operand_list ARROW operand_list {
                     $$ = $2;
                     $$->concatenate(*$4);
                     $$->opcode = $1;
                     delete $4;
-                    
+                    if(!$$->verify_operation())
+                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
                 }
                 | the_opcode operand_list {
                     $$ = $2;
                     $$->opcode = $1;
+                    if(!$$->verify_operation())
+                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
                 }
                 | the_opcode ARROW operand_list { 
                     $$ = $3;
                     $$->opcode = $1;
+                    if(!$$->verify_operation())
+                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
                 }
                 | the_opcode {
                     $$ = new Operation();
                     $$->opcode = $1;
+                    if(!$$->verify_operation())
+                         yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
 		        };
 
 the_opcode       : OPCODE {
@@ -93,27 +101,27 @@ the_opcode       : OPCODE {
 
 operand_list     : reg {
                     $$ = new Operation();
-		            $$->regs.push_back($1);
+		            $$->add_register($1);
 		         }
                  | operand_list COMMA reg {
                     $$ = $1;
-                    $$->regs.push_back($3);
-		         }
+                    $$->add_register($3);
+		         } 
                  | const {
                     $$ = new Operation();
-                    $$->consts.push_back($1);
+                    $$->add_constant($1);
 		         }
                  | operand_list COMMA const {
 		            $$ = $1;
-                    $$->consts.push_back($3);
-		         }
+                    $$->add_constant($3);
+		         }  
                  | lbl {
 		            $$ = new Operation();
-                    $$->labels.push_back($1);
+                    $$->add_label($1);
 		         }
                  | operand_list COMMA lbl {
 		            $$ = $1;
-                    $$->labels.push_back($3);
+                    $$->add_label($3);
 		         };
 
 reg              : REGISTER {
