@@ -1,5 +1,5 @@
 #include <map> //std::map(memory registers)
-#include <string> //std::string, to_string
+#include <string> //std::string
 #include "Program.hpp"
 
 class State {
@@ -23,16 +23,15 @@ class Machine {
         void set_memory(uint,char);
         void onereg(Operation, int);
         uint get_branch_destination(std::string);
-        void reg_state();
-        void mem_state();
-        void prog_state();
-        void exec_state();
     public:
         Machine(Program);
         State get_state();
         void set_state(State);
         void execute_operation();
         void run();
-        
+        std::string reg_state();
+        std::string mem_state();
+        std::string prog_state();
+        std::string exec_state();
 };
 

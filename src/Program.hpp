@@ -14,4 +14,5 @@ class Program{
         uint get_label(std::string);
         uint get_size();
         std::string get_line(uint);
+        bool check_labels();
 };

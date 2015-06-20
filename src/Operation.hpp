@@ -11,13 +11,13 @@ typedef enum opcode_name {NOP=0, ADD, SUB, MULT, DIV,
                   STORE, STOREAI, STOREAO, CSTORE, CSTOREAI, CSTOREAO,
                   I2I, C2C, C2I, I2C,
                   JUMPI, JUMP, CBR,
-                  CMPLT, CMPLE, CMPEQ, CMPNE, CMPGE, CMPGT, 
+                  CMPLT, CMPLE, CMPEQ, CMPNE, CMPGE, CMPGT,
 			      INVALID_OP} Opcode_Name;
 
 class Opcode {
     public:
         const std::string name;
-        int regs, consts, labels, latency;
+        uint regs, consts, labels, latency;
 };
 
 
@@ -28,7 +28,7 @@ class Operation{
     public:
         static Opcode_Name string_to_opcode(std::string);
         static std::string opcode_to_string(Opcode_Name);
-        static void set_latency(Opcode_Name, unsigned int);
+        static void set_latency(Opcode_Name, uint);
         bool verify_operation();
         uint num_regs();
         uint num_lbls();        

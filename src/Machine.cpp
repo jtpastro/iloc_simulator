@@ -1,5 +1,6 @@
-#include <iostream> //cout, cerr
 #include "Machine.hpp"
+#include "SimulationError.hpp" //SimulationError
+#include <sstream>  //std::stringstream
 
 Machine::Machine(Program prog)
 {
@@ -10,15 +11,7 @@ Machine::Machine(Program prog)
 
 int Machine::get_register(std::string reg)
 {
-    std::map<std::string,int>::iterator it = state.registers.find(reg);
-    if(it!=state.registers.end())
-        return it->second;
-    else {
-        if(!quiet)
-            std::cerr <<"WARNING: register " << reg << " not initialized." << std::endl;
-        state.registers[reg] = 0;
-        return 0;
-    }
+    return state.registers[reg];
 }
 
 void Machine::set_register(std::string reg, int value)
@@ -28,15 +21,7 @@ void Machine::set_register(std::string reg, int value)
 
 char Machine::get_memory(uint location)
 {
-    std::map<uint,char>::iterator it = state.memory.find(location);
-    if(it!=state.memory.end())
-        return it->second;
-    else {
-        if(!quiet)
-            std::cerr <<"WARNING: memory address " << location << " was not initialized." << std::endl;
-        state.memory[location] = 0;
-        return 0;
-    }
+    return state.memory[location];
 }
 
 int Machine::get_word(uint location)
@@ -49,13 +34,7 @@ int Machine::get_word(uint location)
 }
 
 uint Machine::get_branch_destination(std::string lbl){
-    try {
-        return program.get_label(lbl);
-    }
-    catch (const std::out_of_range& oor) {
-        std::cerr <<"Semantic Error: label undeclared: " << lbl << "." << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    return program.get_label(lbl);
 }
 
 void Machine::set_memory(uint location,char value)
@@ -71,42 +50,46 @@ void Machine::set_state(State stat){
     state = stat;
 }
 
-void Machine::reg_state(){	
-    std::cout << std::endl << "Registers state: " << std::endl;
+std::string Machine::reg_state(){	
+    std::stringstream ss;
+    ss << '\n' << "Registers state: " << '\n';
     if(state.registers.empty())
-        std::cout << "No registers accessed." << std::endl;
+        ss << "No registers accessed." << '\n';
     else
         for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
-            std::cout << it->first << ": " << it->second << std::endl;
+            ss << it->first << ": " << it->second << '\n';
+    return ss.str();
 }
 
-void Machine::mem_state(){	
-    std::cout << std::endl << "Memory state:" << std::endl;
+std::string Machine::mem_state(){	
+    std::stringstream ss;
+    ss << '\n' << "Memory state:" << '\n';
     if(state.memory.empty())
-        std::cout << "No memory address accessed." << std::endl;
+        ss << "No memory address accessed." << '\n';
     else
         for (std::map<uint,char>::iterator it=state.memory.begin(); it!=state.memory.end(); ++it)
-            std::cout << it->first << ": " << std::to_string(it->second) << std::endl;
+            ss << it->first << ": " << it->second << '\n';
+    return ss.str();
 }
 
-void Machine::prog_state(){	
-    std::cout << std::endl << "Program code:" << std::endl;
+std::string Machine::prog_state(){	
+    std::stringstream ss;
+    ss << '\n' << "Program code:" << '\n';
     for(int i=0; i<program.get_size(); i++)
-        std::cout << program.get_line(i) << std::endl ;
+        ss << program.get_line(i) << '\n' ;
+    return ss.str();
 }
 
-void Machine::exec_state(){
-    std::cout << std::endl << "Execution state:" << std::endl;
-    std::cout << op_count << " instructions executed in " << cycles <<  " cycles." << std::endl;
+std::string Machine::exec_state(){
+    std::stringstream ss;
+    ss << '\n' << "Execution state:" << '\n';
+    ss << op_count << " instructions executed in " << cycles <<  " cycles." << '\n';
+    return ss.str();
 }
 
 void Machine::run(){
     while(state.PC < program.get_size())
         execute_operation();
-    prog_state();
-    reg_state();
-    mem_state();
-    exec_state();
 }
 
 void Machine::onereg(Operation op, int value){ 
@@ -358,9 +341,7 @@ void Machine::execute_operation(){
             onereg(op,result);
             break;
         default:
-            std::cerr <<"Simulator Error: Invalid opcode encountered in execute_operation." << std::endl;
-            exit(EXIT_FAILURE);
-            break;
+            throw SimulationError("Simulator Error: Invalid opcode encountered in execute_operation.");
     }
     cycles += op.get_latency();
     op_count++;

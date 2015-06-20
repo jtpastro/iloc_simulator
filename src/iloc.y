@@ -1,8 +1,9 @@
 %{
     #include <string> //string
-    #include <iostream> //cerr
+    #include <sstream> //cerr
     #include <string.h> //strdup
     #include "Program.hpp"
+    #include "SimulationError.hpp"
 
     #define MAX_ERROR_MESSAGE_LENGTH 100
     #define YYERROR_VERBOSE 1
@@ -18,9 +19,10 @@
         int yylex(void);
         void yyerror (std::string msg);
     }
-   void yyerror(std::string msg) {
-      std::cerr << "At line " << line_counter << ": " << msg << "." << std::endl;
-      exit(EXIT_FAILURE);
+    void yyerror(std::string msg) {
+        std::stringstream ss;
+        ss << "At line " << line_counter << ": " << msg << "." << std::endl;
+        throw SimulationError(ss.str().c_str());
    }
 %}
 
@@ -53,6 +55,8 @@
 %% /* Beginning of rules */
 
 iloc_program    : operation_list {
+                    if(!program.check_labels())
+                        throw SimulationError("Semantic Error: label undeclared.");
                 };
 
 operation_list  : operation {

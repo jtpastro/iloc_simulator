@@ -1,7 +1,7 @@
-#include <stdlib.h>
 #include <map> //std::map(op_specs, op_names)
-#include <iostream> //cerr
+#include <sstream>  //stringstream
 #include "Operation.hpp"
+#include "SimulationError.hpp" //SimulationError
 
        /*               name     regs  consts labels latency 
                         ------   ------ ------ ------ ------- */
@@ -70,23 +70,23 @@ std::string Operation::opcode_to_string(Opcode_Name op){
     return op_specs.at(op).name;
 }
 
-unsigned int Operation::num_regs(){
+uint Operation::num_regs(){
     return op_specs[opcode].regs;
 }
 
-unsigned int Operation::num_lbls(){
+uint Operation::num_lbls(){
     return op_specs[opcode].labels;
 }
 
-unsigned int Operation::num_consts(){
+uint Operation::num_consts(){
     return op_specs[opcode].consts;
 }
 
-unsigned int Operation::get_latency(){
+uint Operation::get_latency(){
     return op_specs[opcode].latency;
 }
 
-void Operation::set_latency(Opcode_Name op_name, unsigned int latency){
+void Operation::set_latency(Opcode_Name op_name, uint latency){
     op_specs.at(op_name).latency = latency;
 }
 
@@ -103,7 +103,8 @@ void Operation::concatenate(Operation other){
 }
 
 std::string Operation::toString(){
-    std::string op = op_specs[opcode].name;   
+    std::string op = op_specs[opcode].name; 
+    std::stringstream ss;
     switch(opcode) {
         case NOP:
             return op;
@@ -118,7 +119,8 @@ std::string Operation::toString(){
         case XOR:
         case LOADAO:
         case CLOADAO:
-            return op + " " + regs[0] + ", " + regs[1] + " => " + regs[2];
+            ss << op << " " << regs[0] << ", " << regs[1] << " => " << regs[2];
+            return ss.str();
         case ADDI:
         case SUBI:
         case RSUBI:
@@ -132,9 +134,11 @@ std::string Operation::toString(){
         case XORI:
         case LOADAI:
         case CLOADAI:
-            return op + " " + regs[0] + ", " + std::to_string(consts[0]) + " => " + regs[1];
+            ss << op << " " << regs[0] << ", " << consts[0] << " => " << regs[1];
+            return ss.str();
         case LOADI:
-            return op + " " + std::to_string(consts[0]) + " => " + regs[0];
+            ss << op << " " << consts[0] << " => " << regs[0];
+            return ss.str();
         case LOAD:
         case CLOAD:
         case STORE:
@@ -143,29 +147,35 @@ std::string Operation::toString(){
         case C2C:
         case C2I:
         case I2C:
-            return op + " " + regs[0] + " => " + regs[1];
+            ss << op << " " << regs[0] << " => " << regs[1];
+            return ss.str();
         case STOREAI:
         case CSTOREAI:
-           return op + " " + regs[0] + " => " + regs[1] + ", " + std::to_string(consts[0]);
+            ss << op << " " << regs[0] << " => " << regs[1] << ", " << consts[0];
+            return ss.str();
         case STOREAO:
         case CSTOREAO:
-           return op + " " + regs[0] + " => " + regs[1] + ", " + regs[2];
+            ss << op << " " << regs[0] << " => " << regs[1] << ", " << regs[2];
+            return ss.str();
         case CMPLT:
         case CMPLE:
         case CMPEQ:
         case CMPNE:
         case CMPGE:
         case CMPGT:
-           return op + " " + regs[0] + ", " + regs[1] + " -> " + regs[2];
+            ss << op << " " << regs[0] << ", " << regs[1] << " -> " << regs[2];
+            return ss.str();
         case JUMPI:
-           return op + " -> " + labels[0];
+            ss << op << " -> " << labels[0];
+            return ss.str();
         case JUMP:
-           return op + " -> " + regs[0];
+            ss << op << " -> " << regs[0];
+            return ss.str();
         case CBR:
-           return op + " " + regs[0] + " -> " + labels[0] + ", " + labels[1];
+            ss << op << " " << regs[0] << " -> " << labels[0] << ", " << labels[1];
+            return ss.str();
         default:
-            std::cerr << "Simulation Error: Invalid opcode encountered in execute_operation." << std::endl;
-            exit(EXIT_FAILURE);
+            throw SimulationError("Simulation Error: Invalid opcode encountered in execute_operation.");
     }
 }
 

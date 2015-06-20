@@ -13,7 +13,8 @@ add_executable(iloc
     Main.cpp
     Operation.cpp
     Machine.cpp
-    Program.cpp   
+    Program.cpp
+    SimulationError.cpp   
     ${BISON_MyParser_OUTPUTS}
     ${FLEX_MyScanner_OUTPUTS}
 )
