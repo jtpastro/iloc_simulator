@@ -28,12 +28,8 @@ static struct argp_option options[] = {
 struct arguments {   
     std::string costs_file;
     bool mem, reg, prog, stat,debug;
-    uint fp, bss;
+    int fp, bss;
 };
-
-template <class T> const T& max (const T& a, const T& b) {
-  return (a<b)?b:a;
-}
 
 static error_t parse_options (int key, char *arg, struct argp_state *state)
 {
@@ -45,8 +41,8 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
         case 's': arguments->stat = true; break;    
         case 'p': arguments->prog = true; break;
         case 'd': arguments->debug = true; break;
-        case 'f': arguments->fp = max(atoi(arg),1); break;
-        case 'b': arguments->bss = max(atoi(arg),0); break;
+        case 'f': arguments->fp = atoi(arg); break;
+        case 'b': arguments->bss = atoi(arg); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       // Not enough arguments.
@@ -67,7 +63,7 @@ const char *argp_program_bug_address =
 static char doc[] =
 "ILOCsim -- a pretty simple iloc simulator";
 
-static struct argp argp = { options, parse_options, 0, doc };
+static struct argp argp = { options, parse_options, doc, doc };
 
 void read_ints (std::string filename) {
     std::ifstream myfile (filename);
@@ -103,19 +99,17 @@ int main(int argc, char** argv) {
         read_ints(arguments.costs_file);
 
     yyparse();
-        
-    arguments.bss = max(program.get_size()*4, (arguments.bss/4)*4);
 
-    Machine mach(program);
+    Machine mach(program, arguments.bss, arguments.fp);
     if(!arguments.debug)
         mach.run();
 
-    if(arguments.reg)
-        std::cout << mach.reg_state();
-    if(arguments.mem)
-        std::cout << mach.mem_state();
     if(arguments.prog)
         std::cout << mach.prog_state();
+    if(arguments.mem)
+        std::cout << mach.mem_state();
+    if(arguments.reg)
+        std::cout << mach.reg_state();
     if(arguments.stat)
         std::cout << mach.exec_state();
 

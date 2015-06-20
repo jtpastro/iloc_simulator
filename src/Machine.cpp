@@ -1,12 +1,23 @@
 #include <sstream>  //std::stringstream
+#include <iomanip>
 #include "SimulationError.hpp" //SimulationError
 #include "Machine.hpp"
 
+template <class T> const T& max (const T& a, const T& b) {
+  return (a<b)?b:a;
+}
 
-Machine::Machine(Program prog)
+uint num_digits(uint number){
+    uint digits = 0; do { number /= 10; digits++; } while (number != 0); return digits;
+}
+
+Machine::Machine(Program prog, uint bss, uint fp)
 {
     program = prog;
     state.PC=0;
+    state.registers["bss"] = max(program.get_size()*4, (bss/4)*4);;
+    state.registers["fp"] = fp;
+    state.registers["sp"] = fp;
 }
 
 int Machine::get_register(std::string reg)
@@ -52,9 +63,9 @@ void Machine::set_state(State stat){
 
 std::string Machine::reg_state(){	
     std::stringstream ss;
-    ss << '\n' << "Registers state: " << '\n';
+    ss << '\n' << "Registers state:\n";
     if(state.registers.empty())
-        ss << "No registers accessed." << '\n';
+        ss << "No registers accessed.\n";
     else
         for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
             ss << it->first << ": " << it->second << '\n';
@@ -62,28 +73,30 @@ std::string Machine::reg_state(){
 }
 
 std::string Machine::mem_state(){	
+    uint n_digits = num_digits((state.memory.rbegin()->first/4)*4+3);
     std::stringstream ss;
-    ss << '\n' << "Memory state:" << '\n';
+    ss << '\n' << "Memory state:\n";
     if(state.memory.empty())
-        ss << "No memory address accessed." << '\n';
+        ss << "No memory address accessed.\n";
     else
-        for (std::map<uint,char>::iterator it=state.memory.begin(); it!=state.memory.end(); ++it)
-            ss << it->first << ": " << (int) it->second << '\n';
+        for (int i=state.registers["bss"]; i<state.memory.size();i+=4)
+            ss << std::setfill('0') << std::setw(n_digits) << i << ".." << std::setfill('0') << std::setw(n_digits) << i+3 << ": " << get_word(i) << '\n';
     return ss.str();
 }
 
-std::string Machine::prog_state(){	
+std::string Machine::prog_state(){
+    uint n_digits = num_digits((state.memory.rbegin()->first/4)*4+3);	
     std::stringstream ss;
-    ss << '\n' << "Program code:" << '\n';
+    ss << '\n' << "Program code:\n";
     for(int i=0; i<program.get_size(); i++)
-        ss << program.get_line(i) << '\n' ;
+        ss << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << ": "  << program.get_line(i) << '\n' ;
     return ss.str();
 }
 
 std::string Machine::exec_state(){
     std::stringstream ss;
-    ss << '\n' << "Execution state:" << '\n';
-    ss << op_count << " instructions executed in " << cycles <<  " cycles." << '\n';
+    ss << '\n' << "Execution state:\n";
+    ss << op_count << " instructions executed in " << cycles <<  " cycles.\n";
     return ss.str();
 }
 

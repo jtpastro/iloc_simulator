@@ -23,7 +23,7 @@ class Machine {
         void onereg(Operation, int);
         uint get_branch_destination(std::string);
     public:
-        Machine(Program);
+        Machine(Program,uint,uint);
         State get_state();
         void set_state(State);
         void execute_operation();
