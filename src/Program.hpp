@@ -6,6 +6,7 @@
 class Program{
         std::map<std::string,uint> symbol_table;
         std::map<uint,std::string> line_table;
+        std::map<std::string,uint> unused_labels;
         std::vector<Operation> op_list;
     public:
         Operation get_operation(uint);
@@ -14,5 +15,5 @@ class Program{
         uint get_label(std::string);
         uint get_size();
         std::string get_line(uint);
-        bool check_labels();
+        const std::map<std::string,uint>& get_unused_labels() const;
 };

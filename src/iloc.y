@@ -1,6 +1,5 @@
 %{
-    #include <string> //string
-    #include <sstream> //cerr
+    #include <sstream> //stringstream
     #include <string.h> //strdup
     #include "Program.hpp"
     #include "SimulationError.hpp"
@@ -55,8 +54,13 @@
 %% /* Beginning of rules */
 
 iloc_program    : operation_list {
-                    if(!program.check_labels())
-                        throw SimulationError("Semantic Error: label undeclared.");
+                    const std::map<std::string,uint>& lbls = program.get_unused_labels();
+                    if(!lbls.empty()){
+                        std::stringstream ss;
+                        for(auto& it : lbls)
+                            ss << "At line " << it.second << ": semantic error, label " << it.first << " undeclared.\n";
+                        throw SimulationError(ss.str().c_str());
+                    }
                 };
 
 operation_list  : operation {

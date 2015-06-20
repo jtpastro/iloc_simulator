@@ -1,6 +1,7 @@
-#include "Machine.hpp"
-#include "SimulationError.hpp" //SimulationError
 #include <sstream>  //std::stringstream
+#include "SimulationError.hpp" //SimulationError
+#include "Machine.hpp"
+
 
 Machine::Machine(Program prog)
 {
@@ -92,7 +93,7 @@ void Machine::run(){
 }
 
 void Machine::onereg(Operation op, int value){ 
-    set_register(op.get_last_register(), value); 
+    set_register(op.get_regs().back(), value); 
     state.PC++;
 }
 
@@ -106,92 +107,92 @@ void Machine::execute_operation(){
             state.PC++;
             break;
         case ADD:
-            result = get_register(op.get_first_register()) + 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) + 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case SUB:
-            result = get_register(op.get_first_register()) - 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) - 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case MULT:
-            result = get_register(op.get_first_register()) * 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) * 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case DIV:
-            result = get_register(op.get_first_register()) / 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) / 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;	
         case AND:
-            result = get_register(op.get_first_register()) & 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) & 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case OR:
-            result = get_register(op.get_first_register()) | 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) | 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case XOR:
-            result = get_register(op.get_first_register()) ^ 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) ^ 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;  
         case ANDI:
-            result = get_register(op.get_first_register()) & op.get_constant();
+            result = get_register(op.get_regs().at(0)) & op.get_constant();
             onereg(op, result);
             break;
         case ORI:
-            result = get_register(op.get_first_register()) | op.get_constant();
+            result = get_register(op.get_regs().at(0)) | op.get_constant();
             onereg(op, result);
             break;
         case XORI:
-            result = get_register(op.get_first_register()) ^ op.get_constant();
+            result = get_register(op.get_regs().at(0)) ^ op.get_constant();
             onereg(op, result);
             break;	  
         case ADDI:
-            result = get_register(op.get_first_register()) + op.get_constant();
+            result = get_register(op.get_regs().at(0)) + op.get_constant();
             onereg(op, result);
             break;
         case SUBI:
-            result = get_register(op.get_first_register()) - op.get_constant();
+            result = get_register(op.get_regs().at(0)) - op.get_constant();
             onereg(op, result);
             break;
         case RSUBI:
-            result = op.get_constant() - get_register(op.get_first_register());
+            result = op.get_constant() - get_register(op.get_regs().at(0));
             onereg(op, result);
             break;
         case MULTI:
-            result = get_register(op.get_first_register()) * op.get_constant();
+            result = get_register(op.get_regs().at(0)) * op.get_constant();
             onereg(op, result);
             break;
         case DIVI:
-            result = get_register(op.get_first_register()) / op.get_constant();
+            result = get_register(op.get_regs().at(0)) / op.get_constant();
             onereg(op, result);
             break;
         case RDIVI:
-            result = op.get_constant() / get_register(op.get_first_register());
+            result = op.get_constant() / get_register(op.get_regs().at(0));
             onereg(op, result);
             break;
         case LSHIFT:
-            result = get_register(op.get_first_register()) << 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) << 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case LSHIFTI:
-            result = get_register(op.get_first_register()) << op.get_constant();
+            result = get_register(op.get_regs().at(0)) << op.get_constant();
             onereg(op, result);
             break;
         case RSHIFT:
-            result = get_register(op.get_first_register()) >> 
-                get_register(op.get_second_register());
+            result = get_register(op.get_regs().at(0)) >> 
+                get_register(op.get_regs().at(1));
             onereg(op, result);
             break;
         case RSHIFTI:
-            result = get_register(op.get_first_register()) >> op.get_constant();
+            result = get_register(op.get_regs().at(0)) >> op.get_constant();
             onereg(op, result);
             break;
         case LOADI:
@@ -199,144 +200,144 @@ void Machine::execute_operation(){
             onereg(op, result);
             break;
         case LOAD:
-            result = get_word(get_register(op.get_first_register()));
+            result = get_word(get_register(op.get_regs().at(0)));
             onereg(op, result);
             break;
         case LOADAI:
-            result = get_word(get_register(op.get_first_register()) +
+            result = get_word(get_register(op.get_regs().at(0)) +
                     op.get_constant());
             onereg(op, result);
             break;
         case LOADAO:
-            result = get_word(get_register(op.get_first_register()) +
-                    get_register(op.get_second_register()));
+            result = get_word(get_register(op.get_regs().at(0)) +
+                    get_register(op.get_regs().at(1)));
             onereg(op, result);
             break;
         case CLOAD:
-            result = get_memory(get_register(op.get_first_register()));
+            result = get_memory(get_register(op.get_regs().at(0)));
             onereg(op, result);
             break;
         case CLOADAI:
-            result = get_memory(get_register(op.get_first_register()) +
+            result = get_memory(get_register(op.get_regs().at(0)) +
                     op.get_constant());
             onereg(op, result);
             break;
         case CLOADAO:
-            result = get_memory(get_register(op.get_first_register()) +
-                    get_register(op.get_second_register()));
+            result = get_memory(get_register(op.get_regs().at(0)) +
+                    get_register(op.get_regs().at(1)));
             onereg(op, result);
             break;
         case STORE:
             for(i=0;i<4;i++) {
-                result = (get_register(op.get_first_register()) << (8*i)) >> 24;
-                location = get_register(op.get_second_register()) + i;
+                result = (get_register(op.get_regs().at(0)) << (8*i)) >> 24;
+                location = get_register(op.get_regs().at(1)) + i;
                 set_memory(location, result);
             }
             state.PC++;
             break;
         case STOREAI:
             for(i=0;i<4;i++) {
-                result = (get_register(op.get_first_register()) << (8*i)) >> 24;
-                location = get_register(op.get_second_register()) + op.get_constant() + i;
+                result = (get_register(op.get_regs().at(0)) << (8*i)) >> 24;
+                location = get_register(op.get_regs().at(1)) + op.get_constant() + i;
                 set_memory(location, result);
             }
             state.PC++;
             break;
         case STOREAO:
             for(i=0;i<4;i++) {
-                result = (get_register(op.get_first_register()) << (8*i)) >> 24;
-                location = get_register(op.get_second_register()) + get_register(op.get_last_register()) + i;
+                result = (get_register(op.get_regs().at(0)) << (8*i)) >> 24;
+                location = get_register(op.get_regs().at(1)) + get_register(op.get_regs().back()) + i;
                 set_memory(location, result);
             }
             state.PC++;
             break; 
         case CSTORE:
-            result = (get_register(op.get_first_register()) << 24) >> 24;
-            location = get_register(op.get_second_register());
+            result = (get_register(op.get_regs().at(0)) << 24) >> 24;
+            location = get_register(op.get_regs().at(1));
             set_memory(location, result);
             state.PC++;
             break;
         case CSTOREAI:
-            result = (get_register(op.get_first_register()) << 24) >> 24;
-            location = get_register(op.get_second_register()) + op.get_constant();
+            result = (get_register(op.get_regs().at(0)) << 24) >> 24;
+            location = get_register(op.get_regs().at(1)) + op.get_constant();
             set_memory(location, result);
             state.PC++;
             break;
         case CSTOREAO:
-            result = (get_register(op.get_first_register()) << 24) >> 24;
-            location = get_register(op.get_second_register()) + 
-                get_register(op.get_last_register());
+            result = (get_register(op.get_regs().at(0)) << 24) >> 24;
+            location = get_register(op.get_regs().at(1)) + 
+                get_register(op.get_regs().back());
             set_memory(location, result);
             state.PC++;
             break;
         case JUMPI:
-            state.PC = (get_branch_destination(op.get_first_label()));
+            state.PC = (get_branch_destination(op.get_labels().at(0)));
             break;
         case JUMP:
-            state.PC = get_register(op.get_first_register());
+            state.PC = get_register(op.get_regs().at(0));
             break;
         case CBR:
-            if (get_register(op.get_first_register()))
-                state.PC = (get_branch_destination(op.get_first_label()));
+            if (get_register(op.get_regs().at(0)))
+                state.PC = (get_branch_destination(op.get_labels().at(0)));
             else
-                state.PC = (get_branch_destination(op.get_second_label()));
+                state.PC = (get_branch_destination(op.get_labels().at(1)));
             break;
         case CMPLT:
-            if (get_register(op.get_first_register()) < 
-                    get_register(op.get_second_register()))
+            if (get_register(op.get_regs().at(0)) < 
+                    get_register(op.get_regs().at(1)))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPLE:
-            if (get_register(op.get_first_register()) <= 
-                    get_register(op.get_second_register()))
+            if (get_register(op.get_regs().at(0)) <= 
+                    get_register(op.get_regs().at(1)))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPEQ:
-            if (get_register(op.get_first_register()) == 
-                    get_register(op.get_second_register()))
+            if (get_register(op.get_regs().at(0)) == 
+                    get_register(op.get_regs().at(1)))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPNE:
-            if (get_register(op.get_first_register()) != 
-                    get_register(op.get_second_register()))
+            if (get_register(op.get_regs().at(0)) != 
+                    get_register(op.get_regs().at(1)))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPGE:
-            if (get_register(op.get_first_register()) >= 
-                    get_register(op.get_second_register()))
+            if (get_register(op.get_regs().at(0)) >= 
+                    get_register(op.get_regs().at(1)))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case CMPGT:
-            if (get_register(op.get_first_register()) > 
-                    get_register(op.get_second_register()))
+            if (get_register(op.get_regs().at(0)) > 
+                    get_register(op.get_regs().at(1)))
                 result = 1;
             else
                 result = 0;
             onereg(op,result);
             break;
         case I2I:
-            result = get_register(op.get_first_register());
+            result = get_register(op.get_regs().at(0));
             onereg(op,result);
             break;
         case C2C:
         case C2I:
         case I2C:
-            result = (get_register(op.get_first_register()) << 24) >> 24;
+            result = (get_register(op.get_regs().at(0)) << 24) >> 24;
             onereg(op,result);
             break;
         default:

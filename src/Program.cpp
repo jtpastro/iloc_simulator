@@ -3,14 +3,18 @@
 
 void Program::add_operation(Operation op){
     op_list.push_back(op);
+    for(std::string lbl : op.get_labels())
+        if(symbol_table.count(lbl)==0)
+            unused_labels[lbl] = op_list.size();
 }
  
 void Program::add_operation(std::string lbl, Operation op){
     if(symbol_table.count(lbl)!=0)
         throw SimulationError("Semantic Error: Repeated label declaration.");
+    unused_labels.erase(lbl);
     symbol_table[lbl] = op_list.size();
     line_table[op_list.size()] = lbl;
-    add_operation(op);
+    op_list.push_back(op);
 }
 
 Operation Program::get_operation(uint pc){
@@ -35,9 +39,6 @@ std::string Program::get_line(uint pc){
   return (it != line_table.end() ? it->second + ": " : "") + op_list.at(pc).toString();  
 }
 
-bool Program::check_labels(){
-    for(auto &op: op_list)
-        if(op.num_lbls()>0 && (symbol_table.count(op.get_first_label())==0 || (op.num_lbls()>1 && symbol_table.count(op.get_second_label())==0)))
-            return false;
-    return true;
+const std::map<std::string,uint>& Program::get_unused_labels() const {
+    return unused_labels;
 }

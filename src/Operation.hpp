@@ -36,14 +36,11 @@ class Operation{
         uint get_latency();               
         Opcode_Name opcode;
         std::string toString();
-        std::string get_first_label();
-        std::string get_second_label();
-        std::string get_first_register();
-        std::string get_second_register();
-        std::string get_last_register();
         void concatenate(Operation);
         void add_label(std::string);
         void add_register(std::string);
         void add_constant(int);
         int get_constant();
+        const std::vector<std::string>& get_regs() const;
+        const std::vector<std::string>& get_labels() const;
 };

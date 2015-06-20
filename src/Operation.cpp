@@ -1,7 +1,7 @@
 #include <map> //std::map(op_specs, op_names)
 #include <sstream>  //stringstream
-#include "Operation.hpp"
 #include "SimulationError.hpp" //SimulationError
+#include "Operation.hpp"
 
        /*               name     regs  consts labels latency 
                         ------   ------ ------ ------ ------- */
@@ -191,24 +191,12 @@ void Operation::add_constant(int cons){
     consts.push_back(cons);
 }
 
-std::string Operation::get_first_label(){
-    return labels[0];
+const std::vector<std::string>& Operation::get_regs() const {
+    return regs;
 }
 
-std::string Operation::get_second_label(){
-    return labels[1];
-}
-
-std::string Operation::get_first_register(){
-    return regs[0];
-}
-
-std::string Operation::get_second_register(){
-    return regs[1];
-}
-
-std::string Operation::get_last_register(){
-    return regs.back();
+const std::vector<std::string>& Operation::get_labels() const {
+    return labels;
 }
 
 int Operation::get_constant(){
