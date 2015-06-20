@@ -1,9 +1,14 @@
 #include <stdlib.h>
+#include <argp.h>
 #include <iostream> //cout
-#include <string.h>
+#include <iostream> //cout
+#include <fstream> //ifstream
+#include <string> //std::string;
+#include <sstream> //stringstream
+#include <exception> //std::out_of_range
+
 #include "Machine.hpp"
 #include "parser.hpp"
-#include <argp.h>
 
 int yyparse();
 extern FILE *yyin;
@@ -11,11 +16,6 @@ extern Program program;
 
 static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
-    {"output",		'o', "OUT_FORMAT", 0, "Output format"},
-    {"reg",		'r', "NUM_REG", 0, "Number of registers of the machine"},
-    {"mem",		'm', "MEM_SIZE", 0, "Memory size in words"},
-    {"start_pos",	'p', "LIM_LOW", 0, "Low frame limit"},
-    {"frame_size",	'f', "LIM_SIZE", 0, "Frame size"},
     { 0 }
 };
 
@@ -35,11 +35,6 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
     struct arguments *arguments = (struct arguments*)(state->input);
     switch (key){
         case 'c': arguments->costs_file = arg; break;
-        case 'o': arguments->output_format = atoi(arg); break;
-        case 'r': arguments->num_reg = atoi(arg); break;
-        case 'm': arguments->mem_size = atoi(arg); break;
-        case 'p': arguments->frame_start = atoi(arg); break;
-        case 'f': arguments->frame_size = atoi(arg); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       // Not enough arguments.
@@ -54,7 +49,7 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
 
 
 const char *argp_program_version =
-"ilocsim 0.1";
+"ilocsim 1.0";
 const char *argp_program_bug_address =
 "<jtpastro@inf.ufrgs.br>";
 
@@ -65,21 +60,31 @@ static char doc[] =
 //static char args_doc[] = "ARG1";
 
 static struct argp argp = { options, parse_options, 0, doc };
-/*
-void read_ints (const char* file_name)
-{
-  FILE* file = fopen (file_name, "r");
-  int l,i = 0;
 
-  fscanf (file, "%d", &l);    
-  while (!feof (file))
-    {  
-      opcode_specs[i++].latency=l;
-      fscanf (file, "%d", &l);      
+void read_ints (std::string filename) {
+    std::ifstream myfile (filename);
+    if (myfile.is_open()) {
+        int latency, line_count=0;
+        std::string opcode, line;
+        while ( getline (myfile,line) ) {
+            line_count++;
+            std::stringstream stream(line);
+            try {
+                stream >> opcode >> latency;
+                Operation::set_latency(Operation::string_to_opcode(opcode), latency);
+            } catch (const std::out_of_range& oor) {
+                std::cerr << "Error loading file " << filename << " at line " << line_count << ": " << line <<  std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+        myfile.close();
+    } else {
+        std::cerr << "Unable to open file: " << filename << "." << std::endl;
+        exit(EXIT_FAILURE);
     }
-  fclose (file);        
 }
-*/
+
+
 
 int main(int argc, char** argv) {
     int mem_size = 0;
@@ -93,16 +98,17 @@ int main(int argc, char** argv) {
     arguments.num_reg=0;
     arguments.mem_size=0;
     arguments.output_format=0;
-    //arguments.costs_file="";
+    arguments.costs_file="";
 
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
-        fprintf(stderr, "%s, error during the parsing of parameters\n", argv[0]);
+        std::cerr << argv[0] << " error during the parsing of parameters." << std::endl;
+        exit(EXIT_FAILURE);
     }
     reg_size= arguments.num_reg;
     mem_size= arguments.mem_size;
 
-    //if(arguments.costs_file[0]!='\0')
-      //  read_ints(arguments.costs_file);    
+    if(arguments.costs_file[0]!='\0')
+        read_ints(arguments.costs_file);
 
     yyparse();
 

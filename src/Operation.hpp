@@ -1,7 +1,8 @@
 #include <string>
 #include <vector>
 
-/*  */
+typedef unsigned int uint;
+
 typedef enum opcode_name {NOP=0, ADD, SUB, MULT, DIV,
                   ADDI, SUBI, RSUBI, MULTI, DIVI, RDIVI,
                   LSHIFT, LSHIFTI, RSHIFT, RSHIFTI,
@@ -27,22 +28,22 @@ class Operation{
     public:
         static Opcode_Name string_to_opcode(std::string);
         static std::string opcode_to_string(Opcode_Name);
-        unsigned int num_regs();
-        unsigned int num_lbls();        
-        unsigned int num_consts();        
-        unsigned int get_latency();               
-        void set_latency(unsigned int);
-        void concatenate(Operation);
+        static void set_latency(Opcode_Name, unsigned int);
         bool verify_operation();
-        std::string toString();
+        uint num_regs();
+        uint num_lbls();        
+        uint num_consts();        
+        uint get_latency();               
         Opcode_Name opcode;
-        void add_label(std::string);
-        void add_register(std::string);
-        void add_constant(int);
+        std::string toString();
         std::string get_first_label();
         std::string get_second_label();
         std::string get_first_register();
         std::string get_second_register();
         std::string get_last_register();
+        void concatenate(Operation);
+        void add_label(std::string);
+        void add_register(std::string);
+        void add_constant(int);
         int get_constant();
 };

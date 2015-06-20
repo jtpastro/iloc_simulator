@@ -1,6 +1,4 @@
 #include <iostream> //cout, cerr
-#include <iomanip> //setw
-#include <exception>
 #include "Machine.hpp"
 
 Machine::Machine(Program prog)
@@ -74,32 +72,41 @@ void Machine::set_state(State stat){
 }
 
 void Machine::reg_state(){	
-    std::cout << std::endl << "Register: Content" << std::endl;
-    for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
-        std::cout << it->first << ": " << it->second << std::endl;
+    std::cout << std::endl << "Registers state: " << std::endl;
+    if(state.registers.empty())
+        std::cout << "No registers accessed." << std::endl;
+    else
+        for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
+            std::cout << it->first << ": " << it->second << std::endl;
 }
 
 void Machine::mem_state(){	
-    std::cout << std::endl << "Address: Content" << std::endl;
-    for (std::map<uint,char>::iterator it=state.memory.begin(); it!=state.memory.end(); ++it)
-        std::cout << it->first << ": " << std::to_string(it->second) << std::endl;
+    std::cout << std::endl << "Memory state:" << std::endl;
+    if(state.memory.empty())
+        std::cout << "No memory address accessed." << std::endl;
+    else
+        for (std::map<uint,char>::iterator it=state.memory.begin(); it!=state.memory.end(); ++it)
+            std::cout << it->first << ": " << std::to_string(it->second) << std::endl;
 }
 
 void Machine::prog_state(){	
-    std::cout << std::endl << "Program code" << std::endl;
+    std::cout << std::endl << "Program code:" << std::endl;
     for(int i=0; i<program.get_size(); i++)
         std::cout << program.get_line(i) << std::endl ;
 }
 
+void Machine::exec_state(){
+    std::cout << std::endl << "Execution state:" << std::endl;
+    std::cout << op_count << " instructions executed in " << cycles <<  " cycles." << std::endl;
+}
+
 void Machine::run(){
-    try { 
-        while(true) execute_operation();
-    } catch (const std::out_of_range& oor) {
-            if(!quiet)
-                prog_state();
-            reg_state();
-            mem_state();
-    }
+    while(state.PC < program.get_size())
+        execute_operation();
+    prog_state();
+    reg_state();
+    mem_state();
+    exec_state();
 }
 
 void Machine::onereg(Operation op, int value){ 
@@ -109,7 +116,7 @@ void Machine::onereg(Operation op, int value){
 
 void Machine::execute_operation(){
     Operation op = program.get_operation(state.PC); 
-    int i;
+    uint i;
     int result;
     uint location;
     switch(op.opcode) {
@@ -355,4 +362,6 @@ void Machine::execute_operation(){
             exit(EXIT_FAILURE);
             break;
     }
+    cycles += op.get_latency();
+    op_count++;
 }

@@ -11,6 +11,8 @@ class State {
 
 class Machine {
         bool quiet;
+        uint cycles=0;
+        uint op_count=0;
         State state;
         Program program;
         int get_word(uint);
@@ -24,6 +26,7 @@ class Machine {
         void reg_state();
         void mem_state();
         void prog_state();
+        void exec_state();
     public:
         Machine(Program);
         State get_state();

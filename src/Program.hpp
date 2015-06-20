@@ -3,8 +3,6 @@
 #include <map>
 #include "Operation.hpp"
 
-typedef unsigned int uint;
-
 class Program{
         std::map<std::string,uint> symbol_table;
         std::map<uint,std::string> line_table;

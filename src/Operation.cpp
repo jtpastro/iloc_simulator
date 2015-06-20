@@ -54,54 +54,12 @@ std::map<Opcode_Name, Opcode> op_specs = {
           { I2C,      { "i2c",       2,    0,     0,     1 }},
           { C2I,      { "c2i",       2,    0,     0,     1 }}};
 
-std::map<std::string,Opcode_Name> op_names = {
-          { "nop",       NOP      },
-          { "add",       ADD      },
-          { "sub",       SUB      },
-          { "mult",      MULT     },
-          { "div",       DIV      },
-          { "or",        OR       },
-          { "xor",       XOR      },
-          { "and",       AND      },
-          { "lshift",    LSHIFT   },
-          { "rshift",    RSHIFT   },
-          { "addI",      ADDI     },
-          { "subI",      SUBI     },
-          { "rsubI",     RSUBI    },
-          { "multI",     MULTI    },
-          { "divI",      DIVI     },
-          { "rdivI",     RDIVI    },
-          { "orI",       OR       },
-          { "xorI",      XOR      },
-          { "andI",      AND      },
-          { "lshiftI",   LSHIFTI  },
-          { "rshiftI",   RSHIFTI  },
-          { "loadI",     LOADI    },
-          { "load",      LOAD     },
-          { "loadAI",    LOADAI   },
-          { "loadAO",    LOADAO   },
-          { "cload",     CLOAD    },
-          { "cloadAI",   CLOADAI  },
-          { "cloadAO",   CLOADAO  },
-          { "store",     STORE    },
-          { "storeAI",   STOREAI  },
-          { "storeAO",   STOREAO  },
-          { "cstore",    CSTORE   },
-          { "cstoreAI",  CSTOREAI },
-          { "cstoreAO",  CSTOREAO },
-          { "jumpI",     JUMPI    },
-          { "jump",      JUMP     },
-          { "cbr",       CBR      },
-          { "cmp_LT",    CMPLT    },
-          { "cmp_LE",    CMPLE    },
-          { "cmp_EQ",    CMPEQ    },
-          { "cmp_NE",    CMPNE    },
-          { "cmp_GE",    CMPGE    },
-          { "cmp_GT",    CMPGT    },
-          { "i2i",       I2I      },
-          { "c2c",       C2C      },
-          { "i2c",       I2C      },
-          { "c2i",       C2I      }};
+std::map<std::string,Opcode_Name> op_names = []() -> std::map<std::string,Opcode_Name> {
+    std::map<std::string,Opcode_Name> names;
+    for (std::map<Opcode_Name, Opcode>::iterator it=op_specs.begin(); it!=op_specs.end(); ++it)
+        names[it->second.name] = it->first;
+    return names;
+}();
 
 Opcode_Name Operation::string_to_opcode(std::string op){
     std::map<std::string,Opcode_Name>::iterator it = op_names.find(op);
@@ -109,8 +67,7 @@ Opcode_Name Operation::string_to_opcode(std::string op){
 }
 
 std::string Operation::opcode_to_string(Opcode_Name op){
-    std::map<Opcode_Name,Opcode>::iterator it = op_specs.find(op);
-    return it!=op_specs.end() ? (it->second).name : "NULL";
+    return op_specs.at(op).name;
 }
 
 unsigned int Operation::num_regs(){
@@ -129,8 +86,8 @@ unsigned int Operation::get_latency(){
     return op_specs[opcode].latency;
 }
 
-void Operation::set_latency(unsigned int latency){
-    op_specs[opcode].latency = latency;
+void Operation::set_latency(Opcode_Name op_name, unsigned int latency){
+    op_specs.at(op_name).latency = latency;
 }
 
 bool Operation::verify_operation(){
@@ -229,11 +186,11 @@ std::string Operation::get_first_label(){
 }
 
 std::string Operation::get_second_label(){
-        return labels[1];
+    return labels[1];
 }
 
 std::string Operation::get_first_register(){
-        return regs[0];
+    return regs[0];
 }
 
 std::string Operation::get_second_register(){

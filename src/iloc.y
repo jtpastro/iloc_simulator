@@ -1,5 +1,5 @@
 %{
-    #include <string> //string, to_string
+    #include <string> //string
     #include <iostream> //cerr
     #include <string.h> //strdup
     #include "Program.hpp"
@@ -19,7 +19,7 @@
         void yyerror (std::string msg);
     }
    void yyerror(std::string msg) {
-      std::cerr << "At line " << std::to_string(line_counter) << ": " << msg << "." << std::endl;
+      std::cerr << "At line " << line_counter << ": " << msg << "." << std::endl;
       exit(EXIT_FAILURE);
    }
 %}
