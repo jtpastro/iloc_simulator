@@ -1,40 +1,52 @@
 #include <stdlib.h>
 #include <argp.h>
 #include <iostream> //cout
-#include <iostream> //cout
 #include <fstream> //ifstream
 #include <string> //std::string;
 #include <sstream> //stringstream
 #include <exception> //std::out_of_range
-
 #include "Machine.hpp"
 #include "parser.hpp"
 
+#define DEFAULT_FRAME_SIZE 65536
+
 int yyparse();
-extern FILE *yyin;
 extern Program program;
 
 static struct argp_option options[] = {
-    {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost"},
+    {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost."},
+    {"fp",          'f', "SIZE", 0, "Set frame pointer."},
+    {"bss",         'b', "SIZE", 0, "Set bss register."},
+    {"memory",		'm',  0, 0, "Print data memory."},
+    {"program",     'p',  0, 0, "Print program memory."},
+    {"register",    'r',  0, 0, "Print registers content."},
+    {"statistics",  's',  0, 0, "Print execution statistics."},
+    {"debug",       'd',  0, 0, "Execute in debug mode."},
     { 0 }
 };
 
-struct arguments {
-    int frame_size;
-    int frame_start;
-    int num_reg;
-    int mem_size;
-    int output_format;
-    
-    char *costs_file;
-
+struct arguments {   
+    std::string costs_file;
+    bool mem, reg, prog, stat,debug;
+    uint fp, bss;
 };
+
+template <class T> const T& max (const T& a, const T& b) {
+  return (a<b)?b:a;
+}
 
 static error_t parse_options (int key, char *arg, struct argp_state *state)
 {
     struct arguments *arguments = (struct arguments*)(state->input);
     switch (key){
         case 'c': arguments->costs_file = arg; break;
+        case 'm': arguments->mem = true; break;
+        case 'r': arguments->reg = true; break;
+        case 's': arguments->stat = true; break;    
+        case 'p': arguments->prog = true; break;
+        case 'd': arguments->debug = true; break;
+        case 'f': arguments->fp = max(atoi(arg),1); break;
+        case 'b': arguments->bss = max(atoi(arg),0); break;
         case ARGP_KEY_END:
                   if (state->arg_num < 0) {
                       // Not enough arguments.
@@ -46,8 +58,6 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
     return 0;
 }
 
-
-
 const char *argp_program_version =
 "ilocsim 1.0";
 const char *argp_program_bug_address =
@@ -56,8 +66,6 @@ const char *argp_program_bug_address =
 // Program documentation.
 static char doc[] =
 "ILOCsim -- a pretty simple iloc simulator";
-
-//static char args_doc[] = "ARG1";
 
 static struct argp argp = { options, parse_options, 0, doc };
 
@@ -84,37 +92,32 @@ void read_ints (std::string filename) {
     }
 }
 
-
-
 int main(int argc, char** argv) {
-    int mem_size = 0;
-    int reg_size = 0;
-    int machine_initialized = 0;
 
-    struct arguments arguments;
-    
-    arguments.frame_size=0;
-    arguments.frame_start=0;
-    arguments.num_reg=0;
-    arguments.mem_size=0;
-    arguments.output_format=0;
-    arguments.costs_file="";
-
+    struct arguments arguments = {"",false,false,false,false,false,DEFAULT_FRAME_SIZE,0};    
     if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
         std::cerr << argv[0] << " error during the parsing of parameters." << std::endl;
         exit(EXIT_FAILURE);
     }
-    reg_size= arguments.num_reg;
-    mem_size= arguments.mem_size;
-
-    if(arguments.costs_file[0]!='\0')
+    if(!arguments.costs_file.empty())
         read_ints(arguments.costs_file);
 
     yyparse();
+        
+    arguments.bss = max(program.get_size()*4, (arguments.bss/4)*4);
 
     Machine mach(program);
-    mach.run();
-    std::cout << mach.reg_state() << mach.mem_state() << mach.prog_state() << mach.exec_state() << std::endl;
+    if(!arguments.debug)
+        mach.run();
+
+    if(arguments.reg)
+        std::cout << mach.reg_state();
+    if(arguments.mem)
+        std::cout << mach.mem_state();
+    if(arguments.prog)
+        std::cout << mach.prog_state();
+    if(arguments.stat)
+        std::cout << mach.exec_state();
 
     return 0;
 };
