@@ -6,7 +6,6 @@ Machine::Machine(Program prog)
 {
     program = prog;
     state.PC=0;
-    quiet=false;
 }
 
 int Machine::get_register(std::string reg)
@@ -68,7 +67,7 @@ std::string Machine::mem_state(){
         ss << "No memory address accessed." << '\n';
     else
         for (std::map<uint,char>::iterator it=state.memory.begin(); it!=state.memory.end(); ++it)
-            ss << it->first << ": " << it->second << '\n';
+            ss << it->first << ": " << (int) it->second << '\n';
     return ss.str();
 }
 

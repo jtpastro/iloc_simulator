@@ -10,7 +10,6 @@ class State {
 };
 
 class Machine {
-        bool quiet;
         uint cycles=0;
         uint op_count=0;
         State state;

@@ -6,9 +6,11 @@ STRING [a-zA-Z0-9\_]+
 
   #include "Operation.hpp"
   #include "parser.hpp"
+  #include "SimulationError.hpp"
   
-  extern "C" int yylex();
-  
+  extern "C" {
+        int yylex();
+        void yyerror (std::string msg);}
   int line_counter = 0;
 
 %}
@@ -45,7 +47,7 @@ L{STRING}       {yylval.str = yytext; return LABEL;}
 \/\/            { /* Comment */}
 [\n]            {line_counter++;}
 {WHITESPACE}    {;}
-
+.|\n            {line_counter++; yyerror("no match for '" + std::string(yytext) + "'"); }
 %%
 
 int yywrap()

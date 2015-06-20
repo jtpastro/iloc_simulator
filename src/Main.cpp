@@ -114,6 +114,7 @@ int main(int argc, char** argv) {
 
     Machine mach(program);
     mach.run();
+    std::cout << mach.reg_state() << mach.mem_state() << mach.prog_state() << mach.exec_state() << std::endl;
 
     return 0;
 };
