@@ -1,11 +1,9 @@
-#include <map> //std::map(memory registers)
-#include <string> //std::string
 #include "Program.hpp"
 
 class State {
     public:
         uint PC;
-        std::map<uint,char> memory;
+        std::vector<char> memory;
         std::map<std::string,int> registers;
 };
 
@@ -21,7 +19,11 @@ class Machine {
         void set_register(std::string,int);
         void set_memory(uint,char);
         void onereg(Operation, int);
+        void check_access(uint);
         uint get_branch_destination(std::string);
+        uint sp();
+        uint fp();
+        uint bss();
     public:
         Machine(Program,uint,uint);
         State get_state();

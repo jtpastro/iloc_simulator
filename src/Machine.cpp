@@ -11,13 +11,27 @@ uint num_digits(uint number){
     uint digits = 0; do { number /= 10; digits++; } while (number != 0); return digits;
 }
 
-Machine::Machine(Program prog, uint bss, uint fp)
+Machine::Machine(Program prog, uint frame_start, uint frame_end)
 {
     program = prog;
     state.PC=0;
-    state.registers["bss"] = max(program.get_size()*4, (bss/4)*4);
-    state.registers["fp"] = fp;
-    state.registers["sp"] = fp;
+    frame_end = (1+frame_end/4)*4-1;
+    state.registers["bss"] = max(program.get_size()*4, (frame_start/4)*4);
+    state.registers["fp"] = frame_end;
+    state.registers["sp"] = frame_end;
+    state.memory.resize(frame_end);
+}
+
+uint Machine::bss(){
+    return state.registers["bss"];
+}
+
+uint Machine::fp(){
+    return state.registers["fp"];
+}
+
+uint Machine::sp(){
+    return state.registers["sp"];
 }
 
 int Machine::get_register(std::string reg)
@@ -27,14 +41,25 @@ int Machine::get_register(std::string reg)
 
 void Machine::set_register(std::string reg, int value)
 {
+    if(reg=="bss" || reg=="fp"){
+        std::stringstream ss;
+        ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": register " << reg << " cannot be modified." << reg_state() << prog_state() << mem_state();
+        throw SimulationError(ss.str().c_str());
+    }
     state.registers[reg] = value;
+}
+
+void Machine::check_access(uint location){
+    if(location < bss() || location > fp()){
+            std::stringstream ss;
+            ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": Illegal memory access." << reg_state() << prog_state() << mem_state();
+            throw SimulationError(ss.str().c_str());
+    }
 }
 
 char Machine::get_memory(uint location)
 {   
-    if(location < state.registers["bss"] || location > state.registers["fp"])
-        throw SimulationError("Simulator Error: Invalid opcode encountered in execute_operation.");
-    return state.memory[location];
+    return state.memory[location - bss()];
 }
 
 int Machine::get_word(uint location)
@@ -52,7 +77,8 @@ uint Machine::get_branch_destination(std::string lbl){
 
 void Machine::set_memory(uint location,char value)
 {
-    state.memory[location] = value;
+    check_access(location);
+    state.memory[location - bss()] = value;
 }
 
 State Machine::get_state(){
@@ -65,7 +91,7 @@ void Machine::set_state(State stat){
 
 std::string Machine::reg_state(){	
     std::stringstream ss;
-    ss << '\n' << "Registers state:\n";
+    ss << "\nRegisters state:\n";
     if(state.registers.empty())
         ss << "No registers accessed.\n";
     else
@@ -75,29 +101,33 @@ std::string Machine::reg_state(){
 }
 
 std::string Machine::mem_state(){	
-    uint n_digits = num_digits((state.memory.rbegin()->first/4)*4+3);
     std::stringstream ss;
-    ss << '\n' << "Memory state:\n";
+    ss << "\nMemory state:\n";
     if(state.memory.empty())
         ss << "No memory address accessed.\n";
-    else
-        for (int i=state.registers["bss"]; i<state.memory.size();i+=4)
+    else{
+        uint n_digits = num_digits(state.memory.size());
+        for (int i=bss(); i<state.memory.size(); i+=4)
             ss << std::setfill('0') << std::setw(n_digits) << i << ".." << std::setfill('0') << std::setw(n_digits) << i+3 << ": " << get_word(i) << '\n';
+    }
     return ss.str();
 }
 
 std::string Machine::prog_state(){
-    uint n_digits = num_digits((state.memory.rbegin()->first/4)*4+3);	
+    uint n_digits = num_digits(state.memory.empty() ? bss() : (state.memory.size()/4)*4+3);	
     std::stringstream ss;
-    ss << '\n' << "Program code:\n";
-    for(int i=0; i<program.get_size(); i++)
+    ss << "\nProgram code:\n";
+    int i=0;
+    for(; i<program.get_size(); i++)
         ss << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << ": "  << program.get_line(i) << '\n' ;
+    for(; i<bss()/4; i++)
+        ss << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << ": nop\n";
     return ss.str();
 }
 
 std::string Machine::exec_state(){
     std::stringstream ss;
-    ss << '\n' << "Execution state:\n";
+    ss << "\nExecution state:\n";
     ss << op_count << " instructions executed in " << cycles <<  " cycles.\n";
     return ss.str();
 }
@@ -215,31 +245,43 @@ void Machine::execute_operation(){
             onereg(op, result);
             break;
         case LOAD:
-            result = get_word(get_register(op.get_regs().at(0)));
+            location = get_register(op.get_regs().at(0));
+            check_access(location);
+            result = get_word(location);
             onereg(op, result);
             break;
         case LOADAI:
-            result = get_word(get_register(op.get_regs().at(0)) +
-                    op.get_constant());
+            location = get_register(op.get_regs().at(0)) +
+                    op.get_constant();
+            check_access(location);
+            result = get_word(location);
             onereg(op, result);
             break;
         case LOADAO:
-            result = get_word(get_register(op.get_regs().at(0)) +
-                    get_register(op.get_regs().at(1)));
+            location = get_register(op.get_regs().at(0)) +
+                    get_register(op.get_regs().at(1));
+            check_access(location);
+            result = get_word(location);
             onereg(op, result);
             break;
         case CLOAD:
-            result = get_memory(get_register(op.get_regs().at(0)));
+            location = get_register(op.get_regs().at(0));
+            check_access(location);
+            result = get_memory(location);
             onereg(op, result);
             break;
         case CLOADAI:
-            result = get_memory(get_register(op.get_regs().at(0)) +
-                    op.get_constant());
+            location = get_register(op.get_regs().at(0)) +
+                    op.get_constant();
+            check_access(location);
+            result = get_memory(location);
             onereg(op, result);
             break;
         case CLOADAO:
-            result = get_memory(get_register(op.get_regs().at(0)) +
-                    get_register(op.get_regs().at(1)));
+            location = get_register(op.get_regs().at(0)) +
+                    get_register(op.get_regs().at(1));
+            check_access(location);
+            result = get_memory(location);
             onereg(op, result);
             break;
         case STORE:
@@ -356,7 +398,7 @@ void Machine::execute_operation(){
             onereg(op,result);
             break;
         default:
-            throw SimulationError("Simulator Error: Invalid opcode encountered in execute_operation.");
+            throw SimulationError("Simulation error: Invalid opcode encountered in execute_operation.");
     }
     cycles += op.get_latency();
     op_count++;
