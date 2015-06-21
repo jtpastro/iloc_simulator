@@ -15,11 +15,11 @@ Machine::Machine(Program prog, uint frame_start, uint frame_end)
 {
     program = prog;
     state.PC=0;
-    frame_end = (1+frame_end/4)*4-1;
+    frame_end = (frame_end/4)*4;
     state.registers["bss"] = max(program.get_size()*4, (frame_start/4)*4);
     state.registers["fp"] = frame_end;
     state.registers["sp"] = frame_end;
-    state.memory.resize(frame_end);
+    state.memory.resize(frame_end+4);
 }
 
 uint Machine::bss(){
@@ -50,7 +50,7 @@ void Machine::set_register(std::string reg, int value)
 }
 
 void Machine::check_access(uint location){
-    if(location < bss() || location > fp()){
+    if(location < bss() || location > fp()+3){
             std::stringstream ss;
             ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": Illegal memory access.";
             throw SimulationError(ss.str().c_str());
@@ -82,20 +82,18 @@ void Machine::set_memory(uint location,char value)
     state.memory[location - bss()] = value;
 }
 
-State Machine::get_state(){
-    return state;
-}
-
-void Machine::set_state(State stat){
-    state = stat;
+void Machine::set_word(uint location,int value)
+{
+    set_memory(location, value >> 24);
+	set_memory(location+1, (value << 8) >> 24);
+	set_memory(location+2, (value << 16) >> 24);
+	set_memory(location+3, (value << 24) >> 24);
 }
 
 std::string Machine::reg_state(){	
     std::stringstream ss;
-    ss << "\nRegisters state:\n";
-    if(state.registers.empty())
-        ss << "No registers accessed.\n";
-    else
+    ss << "\nRegisters state:\n" << "|PC| " << state.PC << '\n';
+    if(!state.registers.empty())
         for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
             ss << "|" << it->first << "| " << it->second << '\n';
     return ss.str();
@@ -144,7 +142,6 @@ void Machine::onereg(Operation op, int value){
 
 bool Machine::execute_operation(){
     Operation op = program.get_operation(state.PC); 
-    uint i;
     int result;
     uint location;
     switch(op.opcode) {
@@ -279,27 +276,21 @@ bool Machine::execute_operation(){
             onereg(op, result);
             break;
         case STORE:
-            for(i=0;i<4;i++) {
-                result = (get_register(op.get_regs().at(0)) << (8*i)) >> 24;
-                location = get_register(op.get_regs().at(1)) + i;
-                set_memory(location, result);
-            }
+            result = get_register(op.get_regs().at(0));
+            location = get_register(op.get_regs().at(1));
+            set_word(location, result);
             state.PC++;
             break;
         case STOREAI:
-            for(i=0;i<4;i++) {
-                result = (get_register(op.get_regs().at(0)) << (8*i)) >> 24;
-                location = get_register(op.get_regs().at(1)) + op.get_constant() + i;
-                set_memory(location, result);
-            }
+            result = get_register(op.get_regs().at(0));
+            location = get_register(op.get_regs().at(1)) + op.get_constant();
+            set_word(location, result);
             state.PC++;
             break;
         case STOREAO:
-            for(i=0;i<4;i++) {
-                result = (get_register(op.get_regs().at(0)) << (8*i)) >> 24;
-                location = get_register(op.get_regs().at(1)) + get_register(op.get_regs().back()) + i;
-                set_memory(location, result);
-            }
+            result = get_register(op.get_regs().at(0));
+            location = get_register(op.get_regs().at(1)) + get_register(op.get_regs().back());
+            set_word(location, result);
             state.PC++;
             break; 
         case CSTORE:
