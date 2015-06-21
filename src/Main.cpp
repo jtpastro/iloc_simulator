@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
         Machine mach(program, arguments.bss, arguments.fp);
         if(!arguments.debug)
             mach.run();
-
+        
         if(arguments.prog)
             std::cout << mach.prog_state();
         if(arguments.mem)

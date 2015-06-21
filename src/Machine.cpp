@@ -43,7 +43,7 @@ void Machine::set_register(std::string reg, int value)
 {
     if(reg=="bss" || reg=="fp"){
         std::stringstream ss;
-        ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": register " << reg << " cannot be modified." << reg_state() << prog_state() << mem_state();
+        ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": register " << reg << " cannot be modified.";
         throw SimulationError(ss.str().c_str());
     }
     state.registers[reg] = value;
@@ -52,13 +52,14 @@ void Machine::set_register(std::string reg, int value)
 void Machine::check_access(uint location){
     if(location < bss() || location > fp()){
             std::stringstream ss;
-            ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": Illegal memory access." << reg_state() << prog_state();
+            ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": Illegal memory access.";
             throw SimulationError(ss.str().c_str());
     }
 }
 
 char Machine::get_memory(uint location)
-{   
+{
+    check_access(location);
     return state.memory[location - bss()];
 }
 
@@ -96,7 +97,7 @@ std::string Machine::reg_state(){
         ss << "No registers accessed.\n";
     else
         for (std::map<std::string,int>::iterator it=state.registers.begin(); it!=state.registers.end(); ++it)
-            ss << it->first << ": " << it->second << '\n';
+            ss << "|" << it->first << "| " << it->second << '\n';
     return ss.str();
 }
 
@@ -108,7 +109,7 @@ std::string Machine::mem_state(){
     else{
         uint n_digits = num_digits(state.memory.size());
         for (int i=bss(); i<state.memory.size(); i+=4)
-            ss << std::setfill('0') << std::setw(n_digits) << i << ".." << std::setfill('0') << std::setw(n_digits) << i+3 << ": " << get_word(i) << '\n';
+            ss << "|" << std::setfill('0') << std::setw(n_digits) << i << ".." << std::setfill('0') << std::setw(n_digits) << i+3 << "| " << get_word(i) << '\n';
     }
     return ss.str();
 }
@@ -119,9 +120,9 @@ std::string Machine::prog_state(){
     ss << "\nProgram code:\n";
     int i=0;
     for(; i<program.get_size(); i++)
-        ss << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << ": "  << program.get_line(i) << '\n' ;
+        ss << "|" << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << "| "  << program.get_line(i) << '\n' ;
     for(; i<bss()/4; i++)
-        ss << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << ": nop\n";
+        ss << "|" << std::setfill('0') << std::setw(n_digits) << i*4 << ".." << std::setfill('0') << std::setw(n_digits) << i*4+3 << "| nop\n";
     return ss.str();
 }
 
@@ -245,41 +246,35 @@ bool Machine::execute_operation(){
             break;
         case LOAD:
             location = get_register(op.get_regs().at(0));
-            check_access(location);
             result = get_word(location);
             onereg(op, result);
             break;
         case LOADAI:
             location = get_register(op.get_regs().at(0)) +
                     op.get_constant();
-            check_access(location);
             result = get_word(location);
             onereg(op, result);
             break;
         case LOADAO:
             location = get_register(op.get_regs().at(0)) +
                     get_register(op.get_regs().at(1));
-            check_access(location);
             result = get_word(location);
             onereg(op, result);
             break;
         case CLOAD:
             location = get_register(op.get_regs().at(0));
-            check_access(location);
             result = get_memory(location);
             onereg(op, result);
             break;
         case CLOADAI:
             location = get_register(op.get_regs().at(0)) +
                     op.get_constant();
-            check_access(location);
             result = get_memory(location);
             onereg(op, result);
             break;
         case CLOADAO:
             location = get_register(op.get_regs().at(0)) +
                     get_register(op.get_regs().at(1));
-            check_access(location);
             result = get_memory(location);
             onereg(op, result);
             break;
