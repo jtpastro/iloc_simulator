@@ -1,6 +1,5 @@
 %{
     #include <sstream> //stringstream
-    #include <string.h> //strdup
     #include "Program.hpp"
     #include "SimulationError.hpp"
 
@@ -65,15 +64,19 @@ iloc_program    : operation_list {
 
 operation_list  : operation {
                     program.add_operation(*$1);
+                    delete $1;
                 }
                 | label_def operation {
                     program.add_operation($1,*$2);
+                    delete $2;
                 }
                 | operation {
                     program.add_operation(*$1);
+                    delete $1;
                 } operation_list
                 | label_def operation {
                     program.add_operation($1, *$2);
+                    delete $2;
                 } operation_list;
 
 operation       : the_opcode operand_list ARROW operand_list {
@@ -132,9 +135,8 @@ operand_list     : reg {
                     $$->add_label($3);
 		         };
 
-reg              : REGISTER {
-                    char *regs = $1; 
-	                $$ = strdup(regs);
+reg              : REGISTER { 
+	                $$ = $1;
     	         };
 
 const            : NUMBER {
@@ -142,13 +144,11 @@ const            : NUMBER {
 		         };
 
 lbl              : LABEL {
-                    char *myLabel = $1; 
-		            $$ = strdup(myLabel);
+		            $$ = $1;
                  };
 
 label_def        : TARGET {
-                    char *myLabel = $1; 
-		            $$ = strdup(myLabel);
+		            $$ = $1;
 		         };
 
 %%
