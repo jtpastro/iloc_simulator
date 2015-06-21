@@ -28,7 +28,7 @@ class Machine {
         Machine(Program,uint,uint);
         State get_state();
         void set_state(State);
-        void execute_operation();
+        bool execute_operation();
         void run();
         std::string reg_state();
         std::string mem_state();

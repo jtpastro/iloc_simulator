@@ -7,6 +7,7 @@
                         ------   ------ ------ ------ ------- */
 std::map<Opcode_Name, Opcode> op_specs = {
           { NOP,      { "nop",       0,    0,     0,     1 }},
+          { HALT,     { "halt",      0,    0,     0,     1 }},
           { ADD,      { "add",       3,    0,     0,     1 }},
           { SUB,      { "sub",       3,    0,     0,     1 }},
           { MULT,     { "mult",      3,    0,     0,     3 }},
@@ -107,6 +108,7 @@ std::string Operation::toString(){
     std::stringstream ss;
     switch(opcode) {
         case NOP:
+        case HALT:
             return op;
         case ADD:
         case SUB:
@@ -175,7 +177,7 @@ std::string Operation::toString(){
             ss << op << " " << regs[0] << " -> " << labels[0] << ", " << labels[1];
             return ss.str();
         default:
-            throw SimulationError("Simulation Error: Invalid opcode encountered in execute_operation.");
+            throw SimulationError("Simulation error: Invalid opcode encountered in toString().");
     }
 }
 

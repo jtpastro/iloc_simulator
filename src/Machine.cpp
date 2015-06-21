@@ -52,7 +52,7 @@ void Machine::set_register(std::string reg, int value)
 void Machine::check_access(uint location){
     if(location < bss() || location > fp()){
             std::stringstream ss;
-            ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": Illegal memory access." << reg_state() << prog_state() << mem_state();
+            ss << "Simulation error executing " << program.get_operation(state.PC).toString() << " at position " << state.PC*4 << ": Illegal memory access." << reg_state() << prog_state();
             throw SimulationError(ss.str().c_str());
     }
 }
@@ -133,8 +133,7 @@ std::string Machine::exec_state(){
 }
 
 void Machine::run(){
-    while(state.PC < program.get_size())
-        execute_operation();
+    while(execute_operation());
 }
 
 void Machine::onereg(Operation op, int value){ 
@@ -142,7 +141,7 @@ void Machine::onereg(Operation op, int value){
     state.PC++;
 }
 
-void Machine::execute_operation(){
+bool Machine::execute_operation(){
     Operation op = program.get_operation(state.PC); 
     uint i;
     int result;
@@ -397,9 +396,12 @@ void Machine::execute_operation(){
             result = (get_register(op.get_regs().at(0)) << 24) >> 24;
             onereg(op,result);
             break;
+        case HALT:
+            return false;
         default:
             throw SimulationError("Simulation error: Invalid opcode encountered in execute_operation.");
     }
     cycles += op.get_latency();
     op_count++;
+    return true;
 }

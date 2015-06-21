@@ -12,6 +12,7 @@ typedef enum opcode_name {NOP=0, ADD, SUB, MULT, DIV,
                   I2I, C2C, C2I, I2C,
                   JUMPI, JUMP, CBR,
                   CMPLT, CMPLE, CMPEQ, CMPNE, CMPGE, CMPGT,
+                  HALT,
 			      INVALID_OP} Opcode_Name;
 
 class Opcode {
