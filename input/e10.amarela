@@ -1,0 +1,11 @@
+loadAI bss, 0 => r0
+cbr r0 -> l0, l1
+l0:
+loadI 0 => r1
+storeAI r1 => bss, 0
+jumpI -> l2
+l1:
+loadI 1 => r3
+storeAI r3 => bss, 0
+l2:
+halt

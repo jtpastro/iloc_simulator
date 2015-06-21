@@ -1,11 +1,11 @@
-L7: loadAI rarp, 0 => r7
+L7: loadAI bss, 0 => r7
 L8: loadI 0 => r8
 L9: cmp_EQ r7, r8 -> r6
 L10: cbr r6 -> L0, L3
 L0: nop
-L3: loadAI rarp, 0 => r4
+L3: loadAI bss, 0 => r4
 L4: loadI 1 => r5
 L5: cmp_EQ r4, r5 -> r3
 L6: cbr r3 -> L1, L2
 L1: nop
-L2: nop
+L2: halt
