@@ -117,8 +117,9 @@ int main(int argc, char** argv) {
         if(arguments.stat)
             std::cout << mach.exec_state();
     } catch (SimulationError& simerr) {
-        std::cerr << simerr.what();
+        std::cerr << simerr.what() << std::endl;
+        return EXIT_FAILURE;
     }
-    return 0;
+    return EXIT_SUCCESS;
 };
 
