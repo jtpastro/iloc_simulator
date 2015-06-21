@@ -6,9 +6,10 @@
 #include <sstream> //stringstream
 #include <exception> //std::out_of_range
 #include "Machine.hpp"
+#include "SimulationError.hpp" //SimulationError
 #include "parser.hpp"
 
-#define DEFAULT_FRAME_SIZE 65536
+#define DEFAULT_FRAME_SIZE 65535
 
 int yyparse();
 extern Program program;
@@ -77,42 +78,47 @@ void read_ints (std::string filename) {
                 stream >> opcode >> latency;
                 Operation::set_latency(Operation::string_to_opcode(opcode), latency);
             } catch (const std::out_of_range& oor) {
-                std::cerr << "Error loading file " << filename << " at line " << line_count << ": " << line <<  std::endl;
-                exit(EXIT_FAILURE);
+                std::stringstream ss;
+                ss << "Error loading file " << filename << " at line " << line_count << ": " << line <<  std::endl;
+                throw SimulationError(ss.str().c_str());
             }
         }
         myfile.close();
     } else {
-        std::cerr << "Unable to open file: " << filename << "." << std::endl;
-        exit(EXIT_FAILURE);
+        std::stringstream ss;
+        ss << "Unable to open file: " << filename << "." << std::endl;
+        throw SimulationError(ss.str().c_str());
     }
 }
 
 int main(int argc, char** argv) {
+    try{
+        struct arguments arguments = {"",false,false,false,false,false,DEFAULT_FRAME_SIZE,0};    
+        if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
+            std::stringstream ss;
+            ss << argv[0] << " error during the parsing of parameters." << std::endl;
+            throw SimulationError(ss.str().c_str());
+        }
+        if(!arguments.costs_file.empty())
+            read_ints(arguments.costs_file);
 
-    struct arguments arguments = {"",false,false,false,false,false,DEFAULT_FRAME_SIZE,0};    
-    if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
-        std::cerr << argv[0] << " error during the parsing of parameters." << std::endl;
-        exit(EXIT_FAILURE);
+        yyparse();
+
+        Machine mach(program, arguments.bss, arguments.fp);
+        if(!arguments.debug)
+            mach.run();
+
+        if(arguments.prog)
+            std::cout << mach.prog_state();
+        if(arguments.mem)
+            std::cout << mach.mem_state();
+        if(arguments.reg)
+            std::cout << mach.reg_state();
+        if(arguments.stat)
+            std::cout << mach.exec_state();
+    } catch (SimulationError& simerr) {
+        std::cerr << simerr.what();
     }
-    if(!arguments.costs_file.empty())
-        read_ints(arguments.costs_file);
-
-    yyparse();
-
-    Machine mach(program, arguments.bss, arguments.fp);
-    if(!arguments.debug)
-        mach.run();
-
-    if(arguments.prog)
-        std::cout << mach.prog_state();
-    if(arguments.mem)
-        std::cout << mach.mem_state();
-    if(arguments.reg)
-        std::cout << mach.reg_state();
-    if(arguments.stat)
-        std::cout << mach.exec_state();
-
     return 0;
 };
 

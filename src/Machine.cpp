@@ -15,7 +15,7 @@ Machine::Machine(Program prog, uint bss, uint fp)
 {
     program = prog;
     state.PC=0;
-    state.registers["bss"] = max(program.get_size()*4, (bss/4)*4);;
+    state.registers["bss"] = max(program.get_size()*4, (bss/4)*4);
     state.registers["fp"] = fp;
     state.registers["sp"] = fp;
 }
@@ -31,7 +31,9 @@ void Machine::set_register(std::string reg, int value)
 }
 
 char Machine::get_memory(uint location)
-{
+{   
+    if(location < state.registers["bss"] || location > state.registers["fp"])
+        throw SimulationError("Simulator Error: Invalid opcode encountered in execute_operation.");
     return state.memory[location];
 }
 
