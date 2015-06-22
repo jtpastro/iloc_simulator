@@ -6,17 +6,16 @@
     #define MAX_ERROR_MESSAGE_LENGTH 100
     #define YYERROR_VERBOSE 1
 
-    extern char yytext[];
-    extern int line_counter;
-
     Program program;
+    void yyerror (std::string msg);
 
     extern "C" {
+        extern int line_counter;
         extern FILE *yyin;
         extern int yylineno;
-        int yylex(void);
-        void yyerror (std::string msg);
+        int yylex();
     }
+
     void yyerror(std::string msg) {
         std::stringstream ss;
         ss << "At line " << line_counter << ": " << msg << "." << std::endl;
