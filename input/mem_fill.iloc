@@ -1,0 +1,7 @@
+loadI 1000 => r0
+loadI 0 => r1
+again: storeAO r1 => r1,bss
+addI r1,4 => r1
+cmp_LT r0,r1 => r2
+cbr r2 => end,again
+end: halt
