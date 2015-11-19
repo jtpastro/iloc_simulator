@@ -138,7 +138,7 @@ void list_commands(){
 }
 
 void print_prog(Machine* mac){
-    for(int i=0;i<mac->get_register("bss")/4;i++)
+    for(int i=0;i<program.get_size();i++)
         std::cout << i << ": " << mac->prog_state(i) << '\n';
 }
 
@@ -162,7 +162,7 @@ void debug(Machine* mac){
             case 'n': running=mac->execute_operation(); break;
             case 'b':
                 if((ss >> num))
-                    if(num < mac->get_register("bss")/4)
+                    if(num < program.get_size())
                         breakpoints[num] = !breakpoints[num];
                     else
                         std::cout << "Breakpoint outside program limits.\n";
@@ -173,7 +173,7 @@ void debug(Machine* mac){
                 break;
             case 'm':
                 if((ss >> num)){
-                    if(num < mac->get_register("bss"))
+                    if(num < program.get_size())
                         std::cout << num << ": " << mac->prog_state(num) << '\n';
                     else if(num < mac->get_register("fp"))
                         std::cout << num << ": " << mac->get_word(num) << '\n';
@@ -185,7 +185,7 @@ void debug(Machine* mac){
             case 'p': print_prog(mac); break;
             case 'r':
                 if((ss >> reg)){
-                    if ((reg=="bss") || (reg=="fp") || (reg=="sp") || (reg=="pc") || (reg.front()=='r'))
+                    if ((reg=="pc") || (reg.front()=='r'))
                         std::cout << reg << ": " << mac->get_register(reg) << '\n';
                     else
                         std::cout << "Invalid register.\n";
