@@ -1,0 +1,14 @@
+	 loadI 12 => r0
+	 storeAI r0 => rarp,244
+	 loadI 34 => r1
+	 storeAI r1 => rarp,306
+	 loadI 56 => r2
+	 storeAI r2 => rarp,2747
+	 loadI 12 => r3
+	 storeAI r3 => rarp,301
+	 loadI 34 => r4
+	 storeAI r4 => rarp,2743
+	 loadI 89 => r5
+	 storeAI r5 => rarp,2836
+	 loadI 67 => r6
+	 storeAI r6 => rarp,2840

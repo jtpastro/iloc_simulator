@@ -1,0 +1,20 @@
+	 loadI 0 => r0
+	 storeAI r0 => rbss,4
+	 loadAI rbss,4 => r1
+	 storeAI r1 => rbss,0
+L0:	 loadAI rbss,0 => r2
+	 loadI 10 => r3
+	 cmp_LT r2,r3 -> r4
+	 cbr r4 -> L1,L2
+L1:	 loadAI rbss,0 => r5
+	 loadI 1 => r6
+	 add r5,r6 => r7
+	 storeAI r7 => rbss,0
+	 loadAI rbss,4 => r8
+	 loadI 1 => r9
+	 add r8,r9 => r10
+	 loadI 3 => r11
+	 mult r10,r11 => r12
+	 storeAI r12 => rbss,4
+	 jumpI -> L0
+L2:	 nop
