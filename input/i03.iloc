@@ -12,3 +12,4 @@
 	 storeAI r5 => rarp,2836
 	 loadI 67 => r6
 	 storeAI r6 => rarp,2840
+halt

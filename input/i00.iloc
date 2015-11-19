@@ -1,2 +1,3 @@
 	 loadI 123 => r0
 	 storeAI r0 => rbss,0
+halt

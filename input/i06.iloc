@@ -12,3 +12,4 @@
 	 mult r6,r7 => r8
 	 add r5,r8 => r9
 	 storeAI r9 => rbss,12
+halt

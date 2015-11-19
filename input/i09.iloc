@@ -7,3 +7,4 @@
 L0:	 loadI 2 => r4
 	 storeAI r4 => rbss,0
 L1:	 nop
+halt

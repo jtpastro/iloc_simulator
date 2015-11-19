@@ -16,3 +16,4 @@
 	 loadAI rbss,4 => r13
 	 add r12,r13 => r14
 	 storeAI r14 => rbss,4
+halt

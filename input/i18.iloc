@@ -6,3 +6,4 @@
 	 loadI 3 => r5
 	 add r4,r5 => r6
 	 storeAI r6 => rbss,0
+halt

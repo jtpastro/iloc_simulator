@@ -12,3 +12,4 @@
 	 storeAI r5 => rbss,2836
 	 loadI 67 => r6
 	 storeAI r6 => rbss,2840
+halt

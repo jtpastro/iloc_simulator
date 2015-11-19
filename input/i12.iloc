@@ -18,3 +18,4 @@ L1:	 loadAI rbss,0 => r5
 	 storeAI r12 => rbss,4
 	 jumpI -> L0
 L2:	 nop
+halt

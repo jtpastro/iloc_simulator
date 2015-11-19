@@ -40,3 +40,4 @@
 	 lshiftI r11,2 => r11
 	 addI r11,0 => r11
 	 storeAO r10 => rbss,r11
+halt

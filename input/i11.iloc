@@ -17,3 +17,4 @@ L0:	 loadAI rbss,4 => r2
 	 cmp_GT r10,r11 -> r12
 	 cbr r12 -> L0,L1
 L1:	 nop
+halt

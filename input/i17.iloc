@@ -19,3 +19,4 @@ L3:	 loadAI rbss,8 => r9
 L0:	 loadI 123 => r12
 	 storeAI r12 => rbss,0
 L1:	 nop
+halt

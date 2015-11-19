@@ -28,3 +28,4 @@
 	 loadAI rbss,8 => r20
 	 sub r19,r20 => r21
 	 storeAI r21 => rbss,8
+halt
