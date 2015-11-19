@@ -18,7 +18,7 @@ Machine::Machine(Program prog, uint mem_size, uint frame_start)
     frame_start = (frame_start/4)*4;
     bss = program.get_size()*4;
     fp = frame_start;
-    memory.resize(mem_size*4);
+    memory.resize((1+(mem_size-1)/4)*4);
 }
 
 int Machine::get_register(std::string reg)

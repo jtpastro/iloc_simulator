@@ -51,7 +51,7 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
         case 'p': arguments->prog = true; break;
         case 'd': arguments->debug = true; break;
         case 'f': arguments->fp = atoi(arg); break;
-        case 'b': arguments->mem_size = atoi(arg); break;
+        case 't': arguments->mem_size = atoi(arg); break;
         case ARGP_KEY_ARG:
             if (state->arg_num >= 1)// Too many arguments.
                 argp_usage (state);
