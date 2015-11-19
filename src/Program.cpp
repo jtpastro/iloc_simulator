@@ -32,7 +32,7 @@ uint Program::get_label(std::string lbl){
         return symbol_table.at(lbl);
     }
     catch (const std::out_of_range& oor) {
-        throw SimulationError(("Simulation error: label undeclared: " + lbl + ".").c_str());
+        throw SimulationError(("Simulation error: label undeclared: " + lbl + "."));
     }
 }
 

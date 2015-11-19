@@ -1,5 +1,7 @@
 #include "SimulationError.hpp"
 
-SimulationError::SimulationError(const char* aCause) {cause=aCause;}
+SimulationError::SimulationError(std::string aCause) {
+    cause = aCause;
+}
         
-const char* SimulationError::what() const throw(){return cause;}
+const char* SimulationError::what() const throw(){return cause.c_str();}

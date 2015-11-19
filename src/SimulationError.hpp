@@ -1,10 +1,11 @@
 #include <exception>
+#include <string>
 
 class SimulationError: public std::exception
 {   private:
-        const char* cause;
+        std::string cause;
 
     public:
-        SimulationError(const char*);
+        SimulationError(std::string);
         virtual const char* what() const throw();
 };

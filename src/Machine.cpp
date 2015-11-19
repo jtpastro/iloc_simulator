@@ -11,41 +11,39 @@ uint num_digits(uint number){
     uint digits = 0; do { number /= 10; digits++; } while (number != 0); return digits;
 }
 
-Machine::Machine(Program prog, uint frame_start, uint frame_end)
+Machine::Machine(Program prog, uint mem_size, uint frame_start)
 {
     program = prog;
     PC=0;
-    frame_end = (frame_end/4)*4;
-    bss = max(program.get_size()*4, (frame_start/4)*4);
-    fp = frame_end;
-    sp = frame_end;
-    memory.resize(frame_end+4);
+    frame_start = (frame_start/4)*4;
+    bss = program.get_size()*4;
+    fp = frame_start;
+    memory.resize(mem_size*4);
 }
 
 int Machine::get_register(std::string reg)
 {
-    if(reg=="bss")  return bss;
-    if(reg=="fp")   return fp;
-    if(reg=="sp")   return sp;
+    if(reg=="rbss") return bss;
+    if(reg=="rarp") return fp;
     if(reg=="pc")   return PC;
     return registers[reg];
 }
 
 void Machine::set_register(std::string reg, int value)
 {
-    if(reg=="bss" || reg=="fp" || reg=="pc"){
+    if(reg=="rbss" || reg=="rarp" || reg=="pc"){
         std::stringstream ss;
         ss << "Simulation error executing " << program.get_operation(PC).toString() << " at position " << PC*4 << ": register " << reg << " cannot be modified.";
-        throw SimulationError(ss.str().c_str());
+        throw SimulationError(ss.str());
     }
     registers[reg] = value;
 }
 
 void Machine::check_access(uint location){
-    if(location < bss || location > fp+3){
+    if(location < bss || location >= memory.size()){
             std::stringstream ss;
             ss << "Simulation error executing " << program.get_operation(PC).toString() << " at position " << PC*4 << ": Illegal memory access.";
-            throw SimulationError(ss.str().c_str());
+            throw SimulationError(ss.str());
     }
 }
 
@@ -84,7 +82,7 @@ void Machine::set_word(uint location,int value)
 
 std::string Machine::reg_state(){	
     std::stringstream ss;
-    ss << "\nRegisters state:\n" << "|pc| " << PC << '\n'<< "|bss| " << bss << '\n' << "|fp| " << fp << '\n' << "|sp| " << sp << '\n';
+    ss << "\nRegisters state:\n" << "|pc| " << PC << '\n'<< "|rbss| " << bss << '\n' << "|rarp| " << fp << '\n';
     if(!registers.empty())
         for (std::map<std::string,int>::iterator it=registers.begin(); it!=registers.end(); ++it)
             ss << "|" << it->first << "| " << it->second << '\n';
@@ -381,7 +379,9 @@ bool Machine::execute_operation(){
         case HALT:
             return false;
         default:
-            throw SimulationError("Simulation error: Invalid opcode encountered in execute_operation.");
+            std::stringstream ss;
+            ss << "Simulation error: Invalid opcode encountered in execute_operation.";
+            throw SimulationError(ss.str());
     }
     cycles += op.get_latency();
     op_count++;

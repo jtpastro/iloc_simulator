@@ -10,7 +10,8 @@
 #include "SimulationError.hpp" //SimulationError
 #include "parser.hpp"
 
-#define DEFAULT_FRAME_SIZE 65535
+#define DEFAULT_FRAME_ADDRESS 1024
+#define DEFAULT_MEMORY_SIZE 65536
 
 extern "C"
 {
@@ -22,8 +23,8 @@ int yyparse();
 
 static struct argp_option options[] = {
     {"costs",		'c', "COST_FILE", 0, "Parametrize instruction cost."},
-    {"fp",          'f', "SIZE", 0, "Set frame pointer."},
-    {"bss",         'b', "SIZE", 0, "Set bss register."},
+    {"frame_start", 'f', "SIZE", 0, "Set frame pointer register (rarp)."},
+    {"mem_size",    't', "SIZE", 0, "Set total memory size."},
     {"memory",		'm',  0, 0, "Print data memory."},
     {"program",     'p',  0, 0, "Print program memory."},
     {"register",    'r',  0, 0, "Print registers content."},
@@ -36,7 +37,7 @@ struct arguments {
     std::string iloc_file;   
     std::string costs_file;
     bool mem, reg, prog, stat,debug;
-    int fp, bss;
+    int fp, mem_size;
 };
 
 static error_t parse_options (int key, char *arg, struct argp_state *state)
@@ -50,7 +51,7 @@ static error_t parse_options (int key, char *arg, struct argp_state *state)
         case 'p': arguments->prog = true; break;
         case 'd': arguments->debug = true; break;
         case 'f': arguments->fp = atoi(arg); break;
-        case 'b': arguments->bss = atoi(arg); break;
+        case 'b': arguments->mem_size = atoi(arg); break;
         case ARGP_KEY_ARG:
             if (state->arg_num >= 1)// Too many arguments.
                 argp_usage (state);
@@ -94,14 +95,14 @@ void read_ints (std::string filename) {
             } catch (const std::out_of_range& oor) {
                 std::stringstream ss;
                 ss << "Error loading file " << filename << " at line " << line_count << ": " << line <<  std::endl;
-                throw SimulationError(ss.str().c_str());
+                throw SimulationError(ss.str());
             }
         }
         myfile.close();
     } else {
         std::stringstream ss;
         ss << "Unable to open file: " << filename << "." << std::endl;
-        throw SimulationError(ss.str().c_str());
+        throw SimulationError(ss.str());
     }
 }
 
@@ -110,7 +111,7 @@ void read_iloc(std::string filename) {
 	if (!myfile) {
 		std::stringstream ss;
         ss << "Unable to open file: " << filename << "." << std::endl;
-        throw SimulationError(ss.str().c_str());
+        throw SimulationError(ss.str());
 	}
 	yyin = myfile;
 
@@ -199,23 +200,22 @@ void debug(Machine* mac){
 
 int main(int argc, char** argv) {
     try{
-        struct arguments arguments = {"","",false,false,false,false,false,DEFAULT_FRAME_SIZE,0};    
+        struct arguments arguments = {"","",false,false,false,false,false,DEFAULT_FRAME_ADDRESS, DEFAULT_MEMORY_SIZE};    
         if (argp_parse (&argp, argc, argv, 0, 0, &arguments) == ARGP_KEY_ERROR){
             std::stringstream ss;
             ss << argv[0] << " error during the parsing of parameters.\n";
-            throw SimulationError(ss.str().c_str());
+            throw SimulationError(ss.str());
         }
         if(!arguments.costs_file.empty())
             read_ints(arguments.costs_file);
 
         read_iloc(arguments.iloc_file);
 
-        Machine mach(program, arguments.bss, arguments.fp);
+        Machine mach(program, arguments.mem_size, arguments.fp);
         if(arguments.debug)
             debug(&mach);
         else
             mach.run();
-                
 
         if(arguments.prog)
             std::cout << mach.prog_state();

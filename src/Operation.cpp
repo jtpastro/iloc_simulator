@@ -177,7 +177,8 @@ std::string Operation::toString(){
             ss << op << " " << regs[0] << " -> " << labels[0] << ", " << labels[1];
             return ss.str();
         default:
-            throw SimulationError("Simulation error: Invalid opcode encountered in toString().");
+            ss << "Simulation error: Invalid opcode encountered in toString().";
+            throw SimulationError(ss.str());
     }
 }
 

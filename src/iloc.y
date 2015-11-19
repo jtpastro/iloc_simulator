@@ -18,8 +18,8 @@
 
     void yyerror(std::string msg) {
         std::stringstream ss;
-        ss << "At line " << line_counter << ": " << msg << "." << std::endl;
-        throw SimulationError(ss.str().c_str());
+        ss << "At line " << line_counter << ": " << msg << ".";
+        throw SimulationError(ss.str());
    }
 %}
 
@@ -57,7 +57,7 @@ iloc_program    : operation_list {
                         std::stringstream ss;
                         for(auto& it : lbls)
                             ss << "At line " << it.second << ": semantic error, label " << it.first << " undeclared.\n";
-                        throw SimulationError(ss.str().c_str());
+                        throw SimulationError(ss.str());
                     }
                 };
 
