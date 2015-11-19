@@ -1,0 +1,2 @@
+	 loadI 123 => r0
+	 storeAI r0 => rarp,0

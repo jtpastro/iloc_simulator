@@ -1,0 +1,9 @@
+	 loadI 1 => r0
+	 storeAI r0 => rbss,0
+	 loadAI rbss,0 => r1
+	 loadI 0 => r2
+	 cmp_GT r1,r2 -> r3
+	 cbr r3 -> L0,L1
+L0:	 loadI 2 => r4
+	 storeAI r4 => rbss,0
+L1:	 nop

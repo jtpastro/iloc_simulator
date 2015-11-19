@@ -1,0 +1,16 @@
+	 loadI 123 => r0
+	 loadI 9 => r1
+	 multI r1,10 => r1
+	 loadI 8 => r2
+	 add r1,r2 => r1
+	 lshiftI r1,2 => r1
+	 addI r1,0 => r1
+	 storeAO r0 => rbss,r1
+	 loadI 456 => r3
+	 loadI 6 => r4
+	 multI r4,10 => r4
+	 loadI 5 => r5
+	 add r4,r5 => r4
+	 lshiftI r4,2 => r4
+	 addI r4,0 => r4
+	 storeAO r3 => rbss,r4

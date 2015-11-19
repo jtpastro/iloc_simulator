@@ -1,66 +1,53 @@
 WHITESPACE [ \t]
 NUM [0-9]+
+STRING [a-zA-Z0-9\_]+
 
 %{
-  /* iloc.l
-   * Lex specification for the ILOC subset defined in
-   * "Engineering a Compiler" by Cooper and Torczon
-   * written by Todd Waterman
-   * 11/30/00 */
 
-  #include <stdlib.h>
-  #include <stdio.h>
-  #include <string.h>
+  #include "Operation.hpp"
+  #include "parser.hpp"
+  #include "SimulationError.hpp"
+  
+  #define YY_DECL extern "C" int yylex()
 
-  #include "operation.h"
-  #include "parser.h"
-
-  int line_counter = 1;
-  Opcode* current_opcode;
+  void yyerror (std::string msg);
+  int line_counter = 0;
 
 %}
 
 %option yylineno
+%option noyywrap
 
 %%
 
-\,            {return COMMA;}
-[\=\-]\>      {return ARROW;}
-
-r{NUM}        {yylval.ival = atoi(&yytext[1])+2; return REGISTER;}
-rarp          {yylval.ival = 0; return REGISTER;}
-rbss          {yylval.ival = 1; return REGISTER;}
-{NUM}         {yylval.ival = atoi(yytext); return NUMBER;}
-\-{NUM}       {yylval.ival = atoi(yytext); return NUMBER;}
-
-[a-zA-Z0-9\_]+: {   
+\;              {return SEMICOLON;}
+\,              {return COMMA;}
+[\=\-]\>        {return ARROW;}
+{STRING}        {   
+                    Opcode_Name current_opcode = Operation::string_to_opcode(yytext);                    
+                    if(current_opcode != INVALID_OP){
+                        yylval.opcode = current_opcode;
+                        return OPCODE;
+                    } else {
+                        REJECT;
+                    }
+                }
+r{STRING}       {yylval.str = yytext;return REGISTER;}
+fp              {yylval.str = yytext;return REGISTER;}
+sp              {yylval.str = yytext;return REGISTER;}
+bss             {yylval.str = yytext;return REGISTER;}
+{NUM}           {yylval.ival = atoi(yytext); return NUMBER;}
+\-{NUM}         {yylval.ival = atoi(yytext); return NUMBER;}
+{STRING}:       {   
                     char *lbl = yytext;
                     lbl[strlen(lbl)-1]='\0';
                     yylval.str = lbl;
-                    return TARGET;}
-
-[a-zA-Z0-9\_]+  {
-                
-		current_opcode = get_opcode(strdup(yytext));
-
-                if (current_opcode){
-                    return OPCODE;
-                }else{
-                    yylval.str = yytext;
-                    return LABEL;
+                    return TARGET;
                 }
-              }
-
-\/\/[^\n]*  { /* Comment */}
-
-[\n]+         {line_counter++; return LINE_BREAK;}
-
-{WHITESPACE}  {;}
-
+{STRING}        {yylval.str = yytext; return LABEL;}
+\/\/            { /* Comment */}
+[\n]            {line_counter++;}
+{WHITESPACE}    {;}
+.|\n            {line_counter++; yyerror("no match for '" + std::string(yytext) + "'"); }
 %%
-
-yywrap()
-{
-  return 1;
-}
 

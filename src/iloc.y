@@ -1,315 +1,154 @@
-/* iloc.y
- * Yacc specification for the ILOC subset defined in
- * "Engineering a Compiler" by Cooper and Torczon
- * written by Todd Waterman
- * 11/30/00 */
-
 %{
-  #include <stdio.h>
-  #include <string.h>
-  #include <stdlib.h>
-  #include "operation.h"
+    #include <sstream> //stringstream
+    #include "Program.hpp"
+    #include "SimulationError.hpp"
 
-  #define MAX_ERROR_MESSAGE_LENGTH 100
+    #define MAX_ERROR_MESSAGE_LENGTH 100
+    #define YYERROR_VERBOSE 1
 
-  Operands* new_operands(void);
-  Operand* append_operands(Operand*,Operand*);
-  int verify_args(Opcode*,int,int,int,int);
+    Program program;
+    void yyerror (std::string msg);
 
-  extern char yytext[];
+    extern "C" {
+        extern int line_counter;
+        extern FILE *yyin;
+        extern int yylineno;
+        int yylex();
+    }
 
-  extern int line_counter;
-  extern Opcode* current_opcode;
-
-  /* This function must be defined */
-  void yyerror(char*);
-
-  /* If an error is encountered during parsing this is changed to 1 */
-  int error_found = 0;
-
-  /* Pointer to the first operation */
-  Operation* first_operation;
-
+    void yyerror(std::string msg) {
+        std::stringstream ss;
+        ss << "At line " << line_counter << ": " << msg << "." << std::endl;
+        throw SimulationError(ss.str().c_str());
+   }
 %}
 
 %union {
     int ival;
-    Operation* op_ptr;
-    Operands* operands_ptr;
-    Operand* operand_ptr;
-    Opcode* opcode_ptr;
-  char *str;
+    Operation *operation;
+    Opcode_Name opcode;
+    char *str;
 }
 
-%token LINE_BREAK
+%token SEMICOLON
 %token COMMA
 %token ARROW
-%token OPCODE
-%token REGISTER
-%token NUMBER
+%token <str> REGISTER
+%token <ival> NUMBER
 %token <str> LABEL
 %token <str> TARGET
+%token <opcode> OPCODE
 
-%type <op_ptr> operation_list
-%type <op_ptr> operation
-%type <opcode_ptr> the_opcode
-%type <operands_ptr> operand_list
-%type <operand_ptr> reg
-%type <operand_ptr> const
-%type <operand_ptr> lbl
-%type <ival> label_def
+%type <operation> operation
+%type <operation> operand_list
+%type <opcode> the_opcode
+%type <str> reg
+%type <ival> const
+%type <str> lbl
+%type <str> label_def
 
 %start iloc_program
 
 %% /* Beginning of rules */
 
-iloc_program     : operation_list
-                 {
-		     first_operation = $1;
-		 }
-                 ;
+iloc_program    : operation_list {
+                    const std::map<std::string,uint>& lbls = program.get_unused_labels();
+                    if(!lbls.empty()){
+                        std::stringstream ss;
+                        for(auto& it : lbls)
+                            ss << "At line " << it.second << ": semantic error, label " << it.first << " undeclared.\n";
+                        throw SimulationError(ss.str().c_str());
+                    }
+                };
 
-operation_list : operation
-                 {
-		     $$ = $1;
-		 }
-                 | label_def operation
-                 {
-		     Label* label_definition = get_label($1);
-		     label_definition->target = $2;
-		     $$ = $2;
-		 }
-                 | operation operation_list
-                 {
-		     $1->next = $2;
-		     $$ = $1;
-		 }
-                 | label_def operation operation_list
-                 {
-		     Label* label_definition = get_label($1);
-		     label_definition->target = $2;
-		     $2->next = $3;
-		     $$ = $2;
-		 }
-                 ;
+operation_list  : operation {
+                    program.add_operation(*$1);
+                    delete $1;
+                }
+                | label_def operation {
+                    program.add_operation($1,*$2);
+                    delete $2;
+                }
+                | operation {
+                    program.add_operation(*$1);
+                    delete $1;
+                } operation_list
+                | label_def operation {
+                    program.add_operation($1, *$2);
+                    delete $2;
+                } operation_list;
 
-operation        : the_opcode operand_list ARROW operand_list LINE_BREAK
-                 {
-		     verify_args($1,$2->num_regs,$2->num_consts+$4->num_consts,
-				 $2->num_labels+$4->num_labels,$4->num_regs);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = $2->regs;
-		     $$->consts = append_operands($2->consts,$4->consts);
-		     $$->labels = append_operands($2->labels,$4->labels);
-		     $$->defs = $4->regs;
-		     $$->next = NULL;
-		     free($2);
-		     free($4);
-		 }
-                 | the_opcode operand_list LINE_BREAK
-                 {
-		     verify_args($1,$2->num_regs,$2->num_consts,$2->num_labels,0);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = $2->regs;
-		     $$->consts = $2->consts;
-		     $$->labels = $2->labels;
-		     $$->defs = NULL;
-		     $$->next = NULL;
-		     free($2);
-		 }
-                 | the_opcode ARROW operand_list LINE_BREAK
-                 {
-		     verify_args($1,0,$3->num_consts,$3->num_labels,$3->num_regs);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = NULL;
-		     $$->consts = $3->consts;
-		     $$->labels = $3->labels;
-		     $$->defs = $3->regs;
-		     $$->next = NULL;
-		     free($3);
-		 }
-                 | the_opcode LINE_BREAK
-                 {
-		     verify_args($1,0,0,0,0);
-		     $$ = malloc(sizeof(Operation));
-		     $$->opcode = $1->name;
-		     $$->srcs = NULL;
-		     $$->consts = NULL;
-		     $$->labels = NULL;
-		     $$->defs = NULL;
-		     $$->next = NULL;
-		 }
-                 ;
+operation       : the_opcode operand_list ARROW operand_list {
+                    $$ = $2;
+                    $$->concatenate(*$4);
+                    $$->opcode = $1;
+                    delete $4;
+                    if(!$$->verify_operation())
+                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
+                }
+                | the_opcode operand_list {
+                    $$ = $2;
+                    $$->opcode = $1;
+                    if(!$$->verify_operation())
+                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
+                }
+                | the_opcode ARROW operand_list { 
+                    $$ = $3;
+                    $$->opcode = $1;
+                    if(!$$->verify_operation())
+                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
+                }
+                | the_opcode {
+                    $$ = new Operation();
+                    $$->opcode = $1;
+                    if(!$$->verify_operation())
+                         yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
+		        };
 
-the_opcode       : OPCODE
-                 {
-		     $$ = current_opcode;
-		 }
-                 ;
+the_opcode       : OPCODE {
+		            $$ = $1;
+		         };
 
-operand_list     : reg
-                 {
-		     $$ = new_operands();
-		     $$->num_regs = 1;
-		     $$->regs = $1;
-		 }
-                 | reg COMMA operand_list
-                 {
-		     $$ = $3;
-		     $$->num_regs += 1;
-		     $1->next = $$->regs;
-		     $$->regs = $1;
-		 }
-                 | const
-                 {
-		     $$ = new_operands();
-		     $$->num_consts = 1;
-		     $$->consts = $1;
-		 }
-                 | const COMMA operand_list
-                 {
-		     $$ = $3;
-		     $$->num_consts += 1;
-		     $1->next = $$->consts;
-		     $$->consts = $1;
-		 }
-                 | lbl
-                 {
-		     $$ = new_operands();
-		     $$->num_labels = 1;
-		     $$->labels = $1;
-		 }
-                 | lbl COMMA operand_list
-                 {
-		     $$ = $3;
-		     $$->num_labels += 1;
-		     $1->next = $$->labels;
-		     $$->labels = $1;
-		 }
-                 ;
+operand_list     : reg {
+                    $$ = new Operation();
+		            $$->add_register($1);
+		         }
+                 | operand_list COMMA reg {
+                    $$ = $1;
+                    $$->add_register($3);
+		         } 
+                 | const {
+                    $$ = new Operation();
+                    $$->add_constant($1);
+		         }
+                 | operand_list COMMA const {
+		            $$ = $1;
+                    $$->add_constant($3);
+		         }  
+                 | lbl {
+		            $$ = new Operation();
+                    $$->add_label($1);
+		         }
+                 | operand_list COMMA lbl {
+		            $$ = $1;
+                    $$->add_label($3);
+		         };
 
-reg              : REGISTER
-                 {
-		     $$ = malloc(sizeof(Operand));
-		     //$$->value = (int) strtol(yylval.ival, (char**) NULL, 10);
-		     $$->value = yylval.ival;
-		     
-		     $$->next = NULL;
-		 }
-                 ;
+reg              : REGISTER { 
+	                $$ = $1;
+    	         };
 
-const            : NUMBER
-                 {
-		     $$ = malloc(sizeof(Operand));
-		     $$->value = yylval.ival;
-		     //printf(" \n Const: %d \n", yylval.ival);
-		     $$->next = NULL;
-		 }
-		 ;
+const            : NUMBER {
+		            $$ = yylval.ival;
+		         };
 
-lbl              : LABEL
-                 {
-                     char *myLabel = $1;
-		     $$ = malloc(sizeof(Operand));
-		     $$->value = insert_label(myLabel);
-		     $$->next = NULL;
-		 }
-                 ;
+lbl              : LABEL {
+		            $$ = $1;
+                 };
 
-label_def        : TARGET
-                 {
-             char *myLabel = $1; 
-		     $$ = insert_label(strdup(myLabel));
-		 }
-                 ;
+label_def        : TARGET {
+		            $$ = $1;
+		         };
 
-%% /* Support Code */
+%%
 
-/* Create a new initialized Operands structure */
-Operands* new_operands()
-{
-    Operands* operands_ptr = malloc(sizeof(Operands));
-    operands_ptr->num_regs = 0;
-    operands_ptr->regs = NULL;
-    operands_ptr->num_consts = 0;
-    operands_ptr->consts = NULL;
-    operands_ptr->num_labels = 0;
-    operands_ptr->labels = NULL;
-    
-    return(operands_ptr);
-}
-
-/* Append the second list of operands to the end of the first */
-Operand* append_operands(Operand* list1, Operand* list2)
-{
-    Operand* start = list1;
-
-    if (!list1)
-	return list2;
-    
-    while(list1->next)
-	list1 = list1->next;
-
-    list1->next = list2;
-
-    return(start);
-}
-
-/* Make sure that the operation was called with the correct number and type
-   of arguments */
-int verify_args(Opcode* operation,int srcs, int consts, int labels, int defs)
-{
-    char* error_message;
-
-    if (operation->srcs != srcs)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of source registers",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-    
-    if (operation->consts != consts)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of constants",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-
-    if (operation->labels != labels)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of labels",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-
-    if (operation->defs != defs)
-    {
-	error_message = malloc(MAX_ERROR_MESSAGE_LENGTH*sizeof(char));
-	sprintf(error_message,"%s used with incorrect number of defined registers",
-		operation->string);
-	yyerror(error_message);
-	free(error_message);
-	return 0;
-    }
-
-    return 1;
-}
-    
-
-void yyerror(char* s)
-{
-  (void) fprintf(stderr, "%s at line %d\n", s, line_counter);
-  error_found = 1;
-}
