@@ -36,5 +36,5 @@ add_executable(iloc
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
    include_directories(/opt/local/include)
    link_directories(/opt/local/lib)
-   target_link_libraries(iloc argp)
+   target_link_libraries(iloc argp intl)
  endif()

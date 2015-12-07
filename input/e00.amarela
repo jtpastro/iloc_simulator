@@ -1,3 +1,0 @@
-loadI 0 => r0
-storeAI r0 => bss, 0
-halt

@@ -1,10 +1,46 @@
-#include <map> //std::map(op_specs, op_names)
+#include <unordered_map> //std::unordered_map(op_names)
+#include <map> //std::map(op_specs)
 #include <sstream>  //stringstream
+#include <algorithm>
 #include "SimulationError.hpp" //SimulationError
 #include "Operation.hpp"
 
-       /*               name     regs  consts labels latency 
-                        ------   ------ ------ ------ ------- */
+struct ci_hash
+{
+    size_t operator()(const std::string& Keyval) const
+    {
+        size_t h = 0;
+        std::for_each( Keyval.begin() , Keyval.end() , [&](char c )
+        {
+            h += tolower(c);
+            h += (h << 10);
+            h ^= (h >> 6);
+        });
+
+        h += (h << 3);
+        h ^= (h >> 11);
+        h += (h << 15);
+
+        return h;
+    }
+};
+
+struct ci_equal
+{
+    bool operator()(const std::string& Left, const std::string& Right) const
+    {
+        return Left.size() == Right.size() 
+             && std::equal ( Left.begin() , Left.end() , Right.begin() ,
+            []( char a , char b )
+        {
+            return tolower(a) == tolower(b); 
+        }
+        );
+    }
+};  
+
+//         OPCODE        name      regs consts labels latency 
+//         ------        ----      ---- ------ ------ ------- 
 std::map<Opcode_Name, Opcode> op_specs = {
           { NOP,      { "nop",       0,    0,     0,     1 }},
           { HALT,     { "halt",      0,    0,     0,     1 }},
@@ -55,15 +91,15 @@ std::map<Opcode_Name, Opcode> op_specs = {
           { I2C,      { "i2c",       2,    0,     0,     1 }},
           { C2I,      { "c2i",       2,    0,     0,     1 }}};
 
-std::map<std::string,Opcode_Name> op_names = []() -> std::map<std::string,Opcode_Name> {
-    std::map<std::string,Opcode_Name> names;
+std::unordered_map<std::string,Opcode_Name, ci_hash, ci_equal> op_names = []() -> std::unordered_map<std::string,Opcode_Name, ci_hash, ci_equal> {
+    std::unordered_map<std::string,Opcode_Name, ci_hash, ci_equal> names;
     for (std::map<Opcode_Name, Opcode>::iterator it=op_specs.begin(); it!=op_specs.end(); ++it)
         names[it->second.name] = it->first;
     return names;
 }();
 
 Opcode_Name Operation::string_to_opcode(std::string op){
-    std::map<std::string,Opcode_Name>::iterator it = op_names.find(op);
+    std::unordered_map<std::string,Opcode_Name>::iterator it = op_names.find(op);
     return it!=op_names.end() ? it->second : INVALID_OP;
 }
 
@@ -71,23 +107,23 @@ std::string Operation::opcode_to_string(Opcode_Name op){
     return op_specs.at(op).name;
 }
 
-uint Operation::num_regs(){
+size_t Operation::num_regs(){
     return op_specs[opcode].regs;
 }
 
-uint Operation::num_lbls(){
+size_t Operation::num_lbls(){
     return op_specs[opcode].labels;
 }
 
-uint Operation::num_consts(){
+size_t Operation::num_consts(){
     return op_specs[opcode].consts;
 }
 
-uint Operation::get_latency(){
+size_t Operation::get_latency(){
     return op_specs[opcode].latency;
 }
 
-void Operation::set_latency(Opcode_Name op_name, uint latency){
+void Operation::set_latency(Opcode_Name op_name, size_t latency){
     op_specs.at(op_name).latency = latency;
 }
 
@@ -177,7 +213,7 @@ std::string Operation::toString(){
             ss << op << " " << regs[0] << " -> " << labels[0] << ", " << labels[1];
             return ss.str();
         default:
-            ss << "Simulation error: Invalid opcode encountered in toString().";
+            ss << "Erro de simulação: Código de instrução inválido.";
             throw SimulationError(ss.str());
     }
 }

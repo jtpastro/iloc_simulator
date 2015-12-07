@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Program.hpp"
 #include "SimulationError.hpp" //SimulationError
 
@@ -10,41 +11,50 @@ void Program::add_operation(Operation op){
  
 void Program::add_operation(std::string lbl, Operation op){
     if(symbol_table.count(lbl)!=0)
-        throw SimulationError("Semantic error: Repeated label declaration.");
+        throw SimulationError("Erro semântico: Declaração de rótulo destino repetida.");
     unused_labels.erase(lbl);
     symbol_table[lbl] = op_list.size();
     line_table[op_list.size()] = lbl;
     op_list.push_back(op);
 }
 
-Operation Program::get_operation(uint pc){
+Operation Program::get_operation(size_t pc){
     try {
         return op_list.at(pc);
     }
     catch (const std::out_of_range& oor) {
-        throw SimulationError("Simulation error: end of program memory reached.");
+        throw SimulationError("Erro de simulação: final da memória de programa alcançado.");
     }
 
 }
 
-uint Program::get_label(std::string lbl){
+size_t Program::get_label(std::string lbl){
     try {
         return symbol_table.at(lbl);
     }
     catch (const std::out_of_range& oor) {
-        throw SimulationError(("Simulation error: label undeclared: " + lbl + "."));
+        std::stringstream ss;
+        ss << "Erro de simulação: rótulo não declarado: " << lbl << "."; 
+        throw SimulationError(ss.str());
     }
 }
 
-uint Program::get_size(){
+size_t Program::get_size(){
     return op_list.size();
 }
 
-std::string Program::get_line(uint pc){
-  std::map<uint,std::string>::iterator it = line_table.find(pc);
-  return (it != line_table.end() ? it->second + ": " : "") + get_operation(pc).toString();  
+std::string Program::get_line(size_t pc){
+    std::map<size_t,std::string>::iterator it = line_table.find(pc);
+    std::stringstream ss;
+    if(it != line_table.end())
+        ss << it->second << ": ";
+    ss << get_operation(pc).toString(); 
+    return ss.str(); 
 }
 
-const std::map<std::string,uint>& Program::get_unused_labels() const {
-    return unused_labels;
+std::string Program::get_unused_labels() {
+    std::stringstream ss;
+    for(auto& it : unused_labels)
+        ss << "Erro semântico na linha " << it.second << ": rótulo " << it.first << " não declarado.\n";    
+    return ss.str();
 }

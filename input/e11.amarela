@@ -1,7 +1,0 @@
-l0:
-loadI 0 => r0
-storeAI r0 => bss, 0
-loadAI bss, 0 => r2
-cbr r2 -> l0, l1
-l1:
-halt

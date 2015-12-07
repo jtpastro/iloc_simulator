@@ -1,7 +1,20 @@
+/**
+    O analisador sintático da linguagem ILOC foi desenvolvido em BISON/C++.
+    A árvore sintática gerada é convertido em um objeto da classe Program que contém todas as instruções ILOC do programa de entrada.
+    Um programa iloc é definido como uma lista de instruções.
+    Por sua vez, uma lista de instruções pode ser uma única instrução ou uma instrução seguida de uma lista de instrução, ambos os casos podem ser precedidos por uma definição de rótulo. 
+    Uma instrução é sempre iniciada por um código de operação.
+    Instruções como NOP e HALT são representadas apenas pelo código de operação, pois não possuem operandos.
+    As instruções de desvio incondicional são representados por código de operação e uma seta seguida da lista de operandos.
+    Todas as outras instruções são representadas pelo código de operação seguido de duas listas de operandos separadas por uma seta.
+    Listas de operandos são definadas recursivamente por um operando ou uma lista de operandos seguida de um operando.
+    Um operando pode ser um valor numérico, um rótulo ou um registrador.
+*/
+
 %{
     #include <sstream> //stringstream
-    #include "Program.hpp"
-    #include "SimulationError.hpp"
+    #include "Program.hpp"//Program
+    #include "SimulationError.hpp"//SimulatorError
 
     #define MAX_ERROR_MESSAGE_LENGTH 100
     #define YYERROR_VERBOSE 1
@@ -18,7 +31,7 @@
 
     void yyerror(std::string msg) {
         std::stringstream ss;
-        ss << "At line " << line_counter << ": " << msg << ".";
+        ss << "Erro na linha " << line_counter << ": " << msg << ".";
         throw SimulationError(ss.str());
    }
 %}
@@ -30,7 +43,6 @@
     char *str;
 }
 
-%token SEMICOLON
 %token COMMA
 %token ARROW
 %token <str> REGISTER
@@ -52,12 +64,9 @@
 %% /* Beginning of rules */
 
 iloc_program    : operation_list {
-                    const std::map<std::string,uint>& lbls = program.get_unused_labels();
+                    std::string lbls = program.get_unused_labels();
                     if(!lbls.empty()){
-                        std::stringstream ss;
-                        for(auto& it : lbls)
-                            ss << "At line " << it.second << ": semantic error, label " << it.first << " undeclared.\n";
-                        throw SimulationError(ss.str());
+                        throw SimulationError(lbls);
                     }
                 };
 
@@ -86,19 +95,13 @@ operation       : the_opcode operand_list ARROW operand_list {
                     if(!$$->verify_operation())
                         yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
                 }
-                | the_opcode operand_list {
-                    $$ = $2;
-                    $$->opcode = $1;
-                    if(!$$->verify_operation())
-                        yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
-                }
-                | the_opcode ARROW operand_list { 
+                | the_opcode ARROW operand_list { //JUMP or JUMPI
                     $$ = $3;
                     $$->opcode = $1;
                     if(!$$->verify_operation())
                         yyerror("syntax error, malformed instruction " + Operation::opcode_to_string($$->opcode));
                 }
-                | the_opcode {
+                | the_opcode { //NOP or HALT
                     $$ = new Operation();
                     $$->opcode = $1;
                     if(!$$->verify_operation())
