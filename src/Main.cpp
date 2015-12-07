@@ -1,25 +1,36 @@
+/** \file Main.cpp */ 
 /**
-\mainpage ILOC Simulator
-\author Jonata Teixeira Pastro
+  \mainpage ILOC Simulator
+  
+  Este simulador funciona com uma interface simples de linha de comando.
 
-Este simulador funciona com uma interface simples de linha de comando.
-Os argumentos do programa são:
-    --costs ou -c seguido do nome de um arquivo com a tabela de custos de instrução, redefine os custos das instruções.
-    --frame_start ou -f seguido de um número inteiro, define o valor inicial do registrador rarp.
-    --mem_size ou -t' seguido de um número inteiro, define o tamanho da memória em bytes.
-    --memory ou -m, exibe o conteúdo da área de dados da memória ao fim da execução.
-    --program ou -p, exibe o conteúdo da área de programa da memória ao fim da execução.
-    --register ou -r, exibe o conteúdo dos registradores usados pelo programa ao fim da execução.
-    --statistics ou -s, exibe as estatísticas de execução do programa.
-    --debug ou -d, executa no modo de depuração.
+  O simulador possui dois modos de execução: contínua e depuração.
+  Caso o argumento --debug não seja usado, o simulador entra no modo de execução contínua.
+  Nesse modo, o simulador executa as operações até encontrar HALT ou acessar uma posição de memória ilegal.
+  O modo de depuração oferece uma interface simples que permite a exibição de registradores, do programa, da memória e de pontos de parada.
+  A execução no modo depuração pode ser feita em passos, executando uma instrução a cada comando ou até encontar pontos de parados adicionados pelo usuário.
+  Ao final da execução poderão ser exibidos os conteúdos da memória de dados e programa, registradores e estatísticas de execução, conforme passado por argumentos de chamada.
 
-Podem configurados os seguintes parametros do simulador: custos de execução, valor do registrador de ponteiro de quadro e tamanho da memória.
-O simulador possui dois modos de execução: contínua e depuração.
-Caso o argumento --debug não seja usado, o simulador entra no modo de execução contínua.
-Nesse modo, o simulador executa as operações até encontrar HALT ou acessar uma posição de memória ilegal.
-O modo de depuração oferece uma interface simples que permite a exibição de registradores, do programa, da memória e de pontos de parada.
-A execução no modo depuração pode ser feita em passos, executando uma instrução a cada comando ou até encontar pontos de parados adicionados pelo usuário.
-Ao final da execução poderão ser exibidos os conteúdos da memória de dados e programa, registradores e estatísticas de execução, conforme passado por argumentos de chamada.
+  Podem configurados os seguintes parametros do simulador: custos de execução, valor do registrador de ponteiro de quadro e tamanho da memória.
+  Os argumentos do programa são:
+
+      --costs ou -c seguido do nome de um arquivo com a tabela de custos de instrução, redefine os custos das instruções.
+
+      --frame_start ou -f seguido de um número inteiro, define o valor inicial do registrador rarp.
+
+      --mem_size ou -t' seguido de um número inteiro, define o tamanho da memória em bytes.
+
+      --memory ou -m, exibe o conteúdo da área de dados da memória ao fim da execução.
+
+      --program ou -p, exibe o conteúdo da área de programa da memória ao fim da execução.
+
+      --register ou -r, exibe o conteúdo dos registradores usados pelo programa ao fim da execução.
+
+      --statistics ou -s, exibe as estatísticas de execução do programa.
+
+      --debug ou -d, executa no modo de depuração.
+
+   \author Jonata Teixeira Pastro
 */
 
 #include <stdlib.h>

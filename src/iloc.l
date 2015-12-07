@@ -1,3 +1,4 @@
+/** \file iloc.l */
 /**
     Analisador léxico da linguagem ILOC escrito em Flex/C++.
     A linguagem consiste de instruções ILOC separadas por quebras de linha.

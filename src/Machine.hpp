@@ -1,5 +1,6 @@
 #include "Program.hpp"
 
+/** \file Machine.hpp */
 /** \brief Classe que gerencia a execução do programa
  *
  * Machine é a classe que executa de fato o programa.
@@ -11,14 +12,13 @@
  *    \see reg_state
  */
 class Machine {
-        size_t PC;                                    //!< Registrador contador de programa
-        int bss;                                    //!< Registrador de segmento de dados
-        int fp;                                     //!< Registrador de ponteiro de quadro
-        int sp;                                     //!< Registrador de ponteiro de pilha
+        size_t PC;                                  //!< Registrador contador de programa
+        size_t bss;                                    //!< Registrador de segmento de dados
+        size_t fp;                                     //!< Registrador de ponteiro de quadro
         std::vector<char> memory;                   //!< Vetor contendo o setor de dados da memória 
         std::map<std::string,int> registers;        //!< Estrutura contendo os registradores
-        size_t cycles=0;                              //!< Contador de ciclos
-        size_t op_count=0;                            //!< Contador de operações
+        size_t cycles=0;                            //!< Contador de ciclos
+        size_t op_count=0;                          //!< Contador de operações
         Program program;                            //!< Estrutura contendo o programa 
         
         /** \brief Armazena um inteiro de 32bits na memória
@@ -66,9 +66,9 @@ class Machine {
 
         /** \brief Construtor
          *
-         * \param location Endereço de memória
-         * \return Conteúdo do endereço no qual iniciará o quadro
-
+         * \param prog Programa a ser executado 
+         * \param mem_size Tamanho da memória
+         * \param frame_start Endereço do início do quadro
          */
         Machine(Program,size_t,size_t);
 

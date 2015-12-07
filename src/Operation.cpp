@@ -1,7 +1,7 @@
 #include <unordered_map> //std::unordered_map(op_names)
 #include <map> //std::map(op_specs)
 #include <sstream>  //stringstream
-#include <algorithm>
+#include <algorithm> //for_each
 #include "SimulationError.hpp" //SimulationError
 #include "Operation.hpp"
 
